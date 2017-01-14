@@ -7,9 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
+		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
+		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
 		0BB1BE6F1E1271E900A9041B /* FlexBuffers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0BB1BE651E1271E900A9041B /* FlexBuffers.framework */; };
 		0BB1BE741E1271E900A9041B /* FlexBuffersTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE731E1271E900A9041B /* FlexBuffersTests.swift */; };
 		0BB1BE761E1271E900A9041B /* FlexBuffers.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BB1BE681E1271E900A9041B /* FlexBuffers.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		0BB1BE801E12720400A9041B /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -22,16 +26,39 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		0B6554FA1E1A9BF700782925 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferDecodeTest.swift; sourceTree = "<group>"; };
+		0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FlexBuffersPerformanceTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B6554FE1E1A9BF700782925 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		0BB1BE651E1271E900A9041B /* FlexBuffers.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FlexBuffers.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB1BE681E1271E900A9041B /* FlexBuffers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FlexBuffers.h; sourceTree = "<group>"; };
 		0BB1BE691E1271E900A9041B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0BB1BE6E1E1271E900A9041B /* FlexBuffersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlexBuffersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0BB1BE731E1271E900A9041B /* FlexBuffersTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexBuffersTests.swift; sourceTree = "<group>"; };
 		0BB1BE751E1271E900A9041B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBuffers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0B6554F91E1A9BF700782925 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0BB1BE611E1271E900A9041B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -50,11 +77,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B6554FD1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {
+			isa = PBXGroup;
+			children = (
+				0B6554FE1E1A9BF700782925 /* main.swift */,
+			);
+			path = FlexBuffersPerformanceTest;
+			sourceTree = "<group>";
+		};
 		0BB1BE5B1E1271E900A9041B = {
 			isa = PBXGroup;
 			children = (
 				0BB1BE671E1271E900A9041B /* FlexBuffers */,
 				0BB1BE721E1271E900A9041B /* FlexBuffersTests */,
+				0B6554FD1E1A9BF700782925 /* FlexBuffersPerformanceTest */,
 				0BB1BE661E1271E900A9041B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,6 +100,7 @@
 			children = (
 				0BB1BE651E1271E900A9041B /* FlexBuffers.framework */,
 				0BB1BE6E1E1271E900A9041B /* FlexBuffersTests.xctest */,
+				0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,6 +110,7 @@
 			children = (
 				0BB1BE681E1271E900A9041B /* FlexBuffers.h */,
 				0BB1BE691E1271E900A9041B /* Info.plist */,
+				0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */,
 			);
 			path = FlexBuffers;
 			sourceTree = "<group>";
@@ -81,6 +119,7 @@
 			isa = PBXGroup;
 			children = (
 				0BB1BE731E1271E900A9041B /* FlexBuffersTests.swift */,
+				0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */,
 				0BB1BE751E1271E900A9041B /* Info.plist */,
 			);
 			path = FlexBuffersTests;
@@ -100,6 +139,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		0B6554FB1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0B6555001E1A9BF700782925 /* Build configuration list for PBXNativeTarget "FlexBuffersPerformanceTest" */;
+			buildPhases = (
+				0B6554F81E1A9BF700782925 /* Sources */,
+				0B6554F91E1A9BF700782925 /* Frameworks */,
+				0B6554FA1E1A9BF700782925 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlexBuffersPerformanceTest;
+			productName = FlexBuffersPerformanceTest;
+			productReference = 0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		0BB1BE641E1271E900A9041B /* FlexBuffers */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0BB1BE791E1271E900A9041B /* Build configuration list for PBXNativeTarget "FlexBuffers" */;
@@ -146,9 +202,15 @@
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Maxim Zaks";
 				TargetAttributes = {
+					0B6554FB1E1A9BF700782925 = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = TK59L26FS4;
+						ProvisioningStyle = Automatic;
+					};
 					0BB1BE641E1271E900A9041B = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = TK59L26FS4;
+						LastSwiftMigration = 0820;
 						ProvisioningStyle = Automatic;
 					};
 					0BB1BE6D1E1271E900A9041B = {
@@ -172,6 +234,7 @@
 			targets = (
 				0BB1BE641E1271E900A9041B /* FlexBuffers */,
 				0BB1BE6D1E1271E900A9041B /* FlexBuffersTests */,
+				0B6554FB1E1A9BF700782925 /* FlexBuffersPerformanceTest */,
 			);
 		};
 /* End PBXProject section */
@@ -194,10 +257,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0B6554F81E1A9BF700782925 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */,
+				0B6554FF1E1A9BF700782925 /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0BB1BE601E1271E900A9041B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0BB1BE801E12720400A9041B /* FlexBuffers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +278,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */,
 				0BB1BE741E1271E900A9041B /* FlexBuffersTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -220,6 +294,24 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		0B6555011E1A9BF700782925 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = TK59L26FS4;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		0B6555021E1A9BF700782925 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = TK59L26FS4;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
 		0BB1BE771E1271E900A9041B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -319,6 +411,7 @@
 		0BB1BE7A1E1271E900A9041B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -333,6 +426,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = maxim.zaks.FlexBuffers;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -340,6 +434,7 @@
 		0BB1BE7B1E1271E900A9041B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEFINES_MODULE = YES;
@@ -361,6 +456,7 @@
 		0BB1BE7D1E1271E900A9041B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = TK59L26FS4;
 				INFOPLIST_FILE = FlexBuffersTests/Info.plist;
@@ -374,6 +470,7 @@
 		0BB1BE7E1E1271E900A9041B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = TK59L26FS4;
 				INFOPLIST_FILE = FlexBuffersTests/Info.plist;
@@ -387,6 +484,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0B6555001E1A9BF700782925 /* Build configuration list for PBXNativeTarget "FlexBuffersPerformanceTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B6555011E1A9BF700782925 /* Debug */,
+				0B6555021E1A9BF700782925 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		0BB1BE5F1E1271E900A9041B /* Build configuration list for PBXProject "FlexBuffers" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -403,6 +508,7 @@
 				0BB1BE7B1E1271E900A9041B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0BB1BE7C1E1271E900A9041B /* Build configuration list for PBXNativeTarget "FlexBuffersTests" */ = {
 			isa = XCConfigurationList;
@@ -411,6 +517,7 @@
 				0BB1BE7E1E1271E900A9041B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
