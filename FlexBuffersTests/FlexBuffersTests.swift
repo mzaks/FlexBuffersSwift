@@ -156,8 +156,13 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddDouble() {
+        let v : Double = 0.1
+        expect(v, [154, 153, 153, 153, 153, 153, 185, 63, 15, 8])
+    }
+    
+    func testAddDoubleWhichCanBeRepresentedAsFloat() {
         let v : Double = 4.5
-        expect(v, [0, 0, 0, 0, 0, 0, 18, 64, 15, 8])
+        expect(v, [0, 0, 144, 64, 14, 4])
     }
     
     func testAddString() {
@@ -259,6 +264,13 @@ class FlexBufferBuilderTests: XCTestCase {
         expect(encodedData: encodedData, [97, 0, 1, 3, 1, 1, 1, 12, 4, 2, 36, 1])
     }
     
+    func testAddMapKeyAsStaticString() {
+        let encodedData = try!FlexBuffer.encodeMap{
+            try $0.add(key: "a" as StaticString, value: 12)
+        }
+        expect(encodedData: encodedData, [97, 0, 1, 3, 1, 1, 1, 12, 4, 2, 36, 1])
+    }
+    
     func testAddMapSortKeys() {
         let encodedData = try!FlexBuffer.encodeMap{
             try $0.add(key: "", value: 45)
@@ -294,7 +306,7 @@ class FlexBufferBuilderTests: XCTestCase {
                 try $0.add(key: "countryCode", value: "XX")
             }
         }
-        expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 4, 4, 4, 4, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 38, 0, 0, 0, 0, 0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 133, 0, 0, 0, 0, 0, 0, 0, 120, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 32, 82, 64, 36, 7, 40, 20, 15, 45, 39, 1])
+        expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 4, 4, 4, 4, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, 0, 0, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1])
     }
     
     func testMapWithIndirectValues() {

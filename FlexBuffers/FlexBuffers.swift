@@ -27,6 +27,12 @@ fileprivate enum BitWidth : UInt8 {
         let u = UInt64(bitPattern: int) << 1
         return width(uint: int >= 0 ? u : ~u)
     }
+    static func width(double : Double) -> BitWidth {
+        if Double(Float32(double)) == double {
+            return .width32
+        }
+        return width64
+    }
 }
 
 fileprivate enum Type : UInt8 {
@@ -39,7 +45,7 @@ fileprivate enum Type : UInt8 {
     blob
     
     var isInline : Bool {
-        return self.rawValue <= Type.key.rawValue
+        return self.rawValue <= Type.float.rawValue
     }
     
     var isTypedVectorElement : Bool {
@@ -137,7 +143,27 @@ public class FlexBuffer {
         }
     }
     
-    public func addValue<T : FlxbValue>(key : String, value : T){
+    public func addValue<T : FlxbValue>(keyString : String, value : T){
+        self.key(keyString)
+        switch value {
+        case let v as Bool:
+            bool(v)
+        case let v as UnsignedInteger:
+            uint(v.toUIntMax())
+        case let v as SignedInteger:
+            int(v.toIntMax())
+        case let v as Float:
+            float(v)
+        case let v as Double:
+            double(v)
+        case let v as String:
+            string(v)
+        default:
+            assertionFailure("Unexpected FlxValue type added \(type(of: value))")
+            break
+        }
+    }
+    public func addValue<T : FlxbValue>(key : StaticString, value : T){
         self.key(key)
         switch value {
         case let v as Bool:
@@ -187,12 +213,6 @@ public class FlexBuffer {
     
     fileprivate func handleValue(_ v : Any){
         switch v {
-        case let v as NSDictionary:
-            untypedMap(v)
-        case let v as NSArray:
-            untypedVector(v)
-        case _ as NSNull:
-            addNull()
         case let v as Bool:
             bool(v)
         case let v as UnsignedInteger:
@@ -207,10 +227,16 @@ public class FlexBuffer {
             float(v)
         case let v as Double:
             double(v)
-        case let v as NSNumber:      // because of NSNumber I suppose :(
-            int(IntMax(v))
         case let v as String:
             string(v)
+        case let v as NSNumber:      // because of NSNumber I suppose :(
+            int(IntMax(v))
+        case let v as NSDictionary:
+            untypedMap(v)
+        case let v as NSArray:
+            untypedVector(v)
+        case _ as NSNull:
+            addNull()
         default:
             assertionFailure("Unexpected FlxValue type added \(type(of: v))")
             break
@@ -218,13 +244,41 @@ public class FlexBuffer {
 
     }
     
-    public func vector(_ f : ()->()){
+    public func addVector(_ f : ()->()){
         let start = startVector()
         f()
         _ = endVector(start: start, typed: false, fixed: false)
     }
     
-    public func map(_ f : ()->()){
+    public func addVector(key : StaticString, _ f : ()->()){
+        self.key(key)
+        let start = startVector()
+        f()
+        _ = endVector(start: start, typed: false, fixed: false)
+    }
+    
+    public func addVector(keyString : String, _ f : ()->()){
+        self.key(keyString)
+        let start = startVector()
+        f()
+        _ = endVector(start: start, typed: false, fixed: false)
+    }
+    
+    public func addMap(_ f : ()->()){
+        let start = startMap()
+        f()
+        endMap(start: start)
+    }
+    
+    public func addMap(key : StaticString, _ f : ()->()){
+        self.key(key)
+        let start = startMap()
+        f()
+        endMap(start: start)
+    }
+    
+    public func addMap(keyString : String, _ f : ()->()){
+        self.key(keyString)
         let start = startMap()
         f()
         endMap(start: start)
@@ -295,7 +349,7 @@ public class FlexBuffer {
         init(value : Double) {
             self.value = Value.Container.double(value)
             self.type = .float
-            minBitWidth = .width64
+            minBitWidth = BitWidth.width(double: value)
         }
         
         func storedWidth(bitWidth : BitWidth = .width8) -> BitWidth {
@@ -326,19 +380,22 @@ public class FlexBuffer {
                 return .width64
             }
         }
+        
+        
     }
     
     let initialSize : Int
     let options : BuilderOptions
     var finished = false
-    var buffer : [UInt8] = []
+    var buffer : [UInt8]
     private var stack : [Value] = []
     var keyPool : [String:Int] = [:]
     var stringPool : [String:Int] = [:]
     
-    init(initialSize : Int = 256, options : BuilderOptions = BuilderOptions.shareKeys) {
+    init(initialSize : Int = 256, options : BuilderOptions = []) {
         self.initialSize = initialSize
         self.options = options
+        buffer = []
     }
     
     func null() {
@@ -366,14 +423,56 @@ public class FlexBuffer {
     }
     
     func string(_ s : String) {
-        let chars = s.utf8CString.map({UInt8($0)})
-        createBlob(data: chars, length: chars.count - 1, trailing: 1, type: .string)
+//        let chars = s.utf8CString.map({UInt8($0)})
+//        createBlob(data: chars, length: chars.count - 1, trailing: 1, type: .string)
+        
+        let chars = s.utf8CString
+        let length = chars.count - 1
+        let bitWidth = BitWidth.width(uint: UInt64(length))
+        let byteWidth = align(width: bitWidth)
+        write(value: length, size: byteWidth)
+        let sloc = buffer.count
+        for c in chars {
+            self.buffer.append(UInt8(c))
+        }
+        stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
     }
     
-    func key(_ s : String) {
-        let sloc = buffer.count
-        let chars = s.utf8CString.map({UInt8($0)})
-        self.buffer += chars
+    fileprivate func key(_ s : String) {
+        let sloc : Int
+        if options.contains(.shareKeys), let index = keyPool[s] {
+            sloc = index
+        } else {
+            sloc = buffer.count
+            for c in s.utf8CString {
+                self.buffer.append(UInt8(c))
+            }
+            if options.contains(.shareKeys) {
+                keyPool[s] = sloc
+            }
+        }
+        
+        stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
+    }
+    
+    fileprivate func key(_ s : StaticString) {
+        let sd = s.description
+        let sloc : Int
+        if options.contains(.shareKeys), let index = keyPool[sd] {
+            sloc = index
+        } else {
+            sloc = buffer.count
+            s.withUTF8Buffer {
+                for c in $0 {
+                    buffer.append(c)
+                }
+                self.buffer.append(0)
+            }
+            if options.contains(.shareKeys) {
+                keyPool[sd] = sloc
+            }
+        }
+        
         stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
     }
     
@@ -416,10 +515,9 @@ public class FlexBuffer {
         }
     }
     
-    func writeOffset(value : UInt64, size : UInt8){
+    func writeOffset(value : UInt64, size : UInt8) {
         let reloff = UInt64(buffer.count) - value
-        // TODO: check what is wrong???
-        //assert(reloff < UInt64(1) << UInt64(size * 8) || size == 8)
+        assert(size == 8 || reloff < UInt64(1 << UInt64(size * 8)))
         write(value: reloff, size: size)
     }
     
@@ -515,7 +613,7 @@ public class FlexBuffer {
         }
         
         let keys = creteVector(start: start, vecLen: len, step: 2, typed: true, fixed: false)
-        let vec = creteVector(start: start + 1, vecLen: len, step: 2, typed: false, fixed: false, keysRelOffset: UInt64(buffer.count) - keys.value.asUInt, keysByteWidth: UInt64(1 << keys.minBitWidth.rawValue))
+        let vec = creteVector(start: start + 1, vecLen: len, step: 2, typed: false, fixed: false, keys: keys)
         
         stack.removeLast(stack.count - start)
         stack.append(vec)
@@ -543,17 +641,19 @@ public class FlexBuffer {
     
     fileprivate func creteVector(start : Int, vecLen : Int, step : Int, typed : Bool,
                      fixed: Bool,
-                     keysRelOffset : UInt64 = 0,
-                     keysByteWidth : UInt64 = 0) -> Value {
+                     keys : Value? = nil) -> Value {
         // Figure out smallest bit width we can store this vector with.
-        var bitWidth = BitWidth.width(int: Int64(vecLen))
+        var bitWidth = BitWidth.width(uint: UInt64(vecLen))
         var prefixElems = 1
-        if keysRelOffset != 0 {
+        
+        if let keys = keys {
             // If this vector is part of a map, we will pre-fix an offset to the keys
             // to this vector.
-            bitWidth = BitWidth(rawValue: max(bitWidth.rawValue, BitWidth.width(uint: keysRelOffset).rawValue))! // FIXME:
+            let elemWidth = keys.elementWidth(size: buffer.count, index: 0)
+            bitWidth = BitWidth(rawValue: max(bitWidth.rawValue, elemWidth.rawValue))! // FIXME:
             prefixElems += 2
         }
+        
         var vectorType = Type.key
         for i in stride(from: start, to: stack.count, by: step) {
             let elemWidth = stack[i].elementWidth(size: buffer.count, index: i + prefixElems)
@@ -569,9 +669,9 @@ public class FlexBuffer {
         assert(vectorType.isTypedVectorElement, "your fixed types are not one of: Int / UInt / Float / Key")
         let byteWidth = align(width: bitWidth)
         // Write vector. First the keys width/offset if available, and size.
-        if keysRelOffset != 0 {
-            write(value: keysRelOffset, size: byteWidth)
-            write(value: keysByteWidth, size: byteWidth)
+        if let keys = keys {
+            writeOffset(value: keys.value.asUInt, size: byteWidth)
+            write(value: UInt64(1 << keys.minBitWidth.rawValue), size: byteWidth)
         }
         if !fixed {
             write(value: vecLen, size: byteWidth)
@@ -589,7 +689,7 @@ public class FlexBuffer {
         }
         
         return Value(value: UInt64(vloc),
-                     type: keysRelOffset != 0
+                     type: keys != nil
                             ? .map
                             : (typed
                                 ? vectorType.toTypedVector(length: UInt8(fixed ? vecLen : 0))
@@ -660,9 +760,13 @@ extension FlexBuffer : FlexBufferVectorBuilder {
 
 public protocol FlexBufferMapBuilder {
     func add(key : String, value : Any) throws
+    func add(key : StaticString, value : Any) throws
     func add<T : FlxbBigScalarValue>(key : String, indirectValue : T) throws
+    func add<T : FlxbBigScalarValue>(key : StaticString, indirectValue : T) throws
     func vector(key : String, _ f : (FlexBufferVectorBuilder) throws -> ()) throws
+    func vector(key : StaticString, _ f : (FlexBufferVectorBuilder) throws -> ()) throws
     func map(key : String, _ f : (FlexBufferMapBuilder) throws -> ()) throws
+    func map(key : StaticString, _ f : (FlexBufferMapBuilder) throws -> ()) throws
 }
 
 extension FlexBuffer : FlexBufferMapBuilder {
@@ -670,7 +774,15 @@ extension FlexBuffer : FlexBufferMapBuilder {
         self.key(key)
         try pushIndirect(indirectValue)
     }
+    public func add<T : FlxbBigScalarValue>(key: StaticString, indirectValue: T) throws {
+        self.key(key)
+        try pushIndirect(indirectValue)
+    }
     public func add(key: String, value: Any) throws {
+        self.key(key)
+        handleValue(value)
+    }
+    public func add(key: StaticString, value: Any) throws {
         self.key(key)
         handleValue(value)
     }
@@ -680,7 +792,19 @@ extension FlexBuffer : FlexBufferMapBuilder {
         try f(self)
         _ = self.endMap(start: start)
     }
+    public func map(key: StaticString, _ f: (FlexBufferMapBuilder) throws -> ()) throws {
+        self.key(key)
+        let start = self.startMap()
+        try f(self)
+        _ = self.endMap(start: start)
+    }
     public func vector(key: String, _ f: (FlexBufferVectorBuilder) throws -> ()) throws {
+        self.key(key)
+        let start = self.startVector()
+        try f(self)
+        _ = self.endVector(start: start, typed: false, fixed: false)
+    }
+    public func vector(key: StaticString, _ f: (FlexBufferVectorBuilder) throws -> ()) throws {
         self.key(key)
         let start = self.startVector()
         try f(self)
@@ -904,7 +1028,7 @@ public struct FlxbReference {
             return nil
         case .key :
             if let p = self.indirect {
-                return String(cString: p.assumingMemoryBound(to: UInt8.self))
+                return String(validatingUTF8: p.assumingMemoryBound(to: CChar.self))
             }
             return nil
             
@@ -967,8 +1091,8 @@ public struct FlxbString {
         return 0
     }
     
-    var string : String {
-        return String(cString: dataPointer.assumingMemoryBound(to: UInt8.self))
+    var string : String? {
+        return String(validatingUTF8: dataPointer.assumingMemoryBound(to: CChar.self))
     }
 }
 
@@ -1039,7 +1163,14 @@ public struct FlxbMap : Sequence {
         return 0
     }
     
-    public subscript(key: String) -> FlxbReference? {
+    public subscript(key: StaticString) -> FlxbReference? {
+        guard let index = keyIndex(key: key) else {
+            return nil
+        }
+        return values?[index]
+    }
+    
+    public func get(key: String) -> FlxbReference? {
         guard let index = keyIndex(key: key) else {
             return nil
         }
@@ -1067,8 +1198,6 @@ public struct FlxbMap : Sequence {
         }
         
         func comp(i : Int) -> Int8? {
-            print(_keys.map{$0.asString})
-            print(_keys[i]?.asString)
             guard let key2 = _keys[i]?.asPointer else {
                 return nil
             }
@@ -1078,6 +1207,53 @@ public struct FlxbMap : Sequence {
                 let c1 = key1[index]
                 let c2 = key2.load(fromByteOffset: index, as: CChar.self)
                 let c = c1 - c2
+                if c != 0 {
+                    return c
+                }
+                if c1 == 0 && c2 == 0 {
+                    return 0
+                }
+                index += 1
+            }
+        }
+        
+        var low = 0
+        var high = _keys.count - 1
+        while low <= high {
+            let mid = (high + low) >> 1
+            guard let dif = comp(i: mid) else {
+                return nil
+            }
+            if dif == 0 {
+                return mid
+            }
+            if dif < 0 {
+                high = mid - 1
+            } else {
+                low = mid + 1
+            }
+        }
+        return nil
+        
+    }
+    
+    private func keyIndex(key : StaticString) -> Int? {
+        
+        let key1 = key.utf8Start
+        guard let _keys = keys else {
+            return nil
+        }
+        
+        func comp(i : Int) -> Int8? {
+            guard let key2 = _keys[i]?.asPointer else {
+                return nil
+            }
+            var index = 0
+            
+            while true {
+                let c1 = CChar(key1.advanced(by: index).pointee)
+                let c2 = key2.load(fromByteOffset: index, as: CChar.self)
+                let c = c1 &- c2
                 if c != 0 {
                     return c
                 }
@@ -1140,6 +1316,11 @@ extension FlexBuffer : FlexBufferDecoder {
         }
         let byteWidth = data[data.count - 1]
         let packedType = data[data.count - 2]
+        
+//        let p1 : UnsafeMutablePointer<UInt8> = UnsafeMutablePointer.allocate(capacity: data.count)
+//        let originalBuffer = UnsafeMutableBufferPointer(start: p1, count: data.count)
+//        _ = data.copyBytes(to: originalBuffer)
+//        let pointer = UnsafeRawPointer(p1)
         var pointer : UnsafePointer<UInt8>! = nil
         data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) in
             pointer = u8Ptr
