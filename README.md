@@ -31,7 +31,7 @@ print(map.debugDescription)
 
 There is also an API for convinient encoding, which is however inefficient
 ```swift
-let data = FlexBuffer.encodeInefficientButConvinient([
+let data = FlexBuffer.encodeInefficientButConvenient([
     "age" : 35,
     "flags" : [true, false, true, true],
     "weight" : 72.5,
