@@ -119,7 +119,7 @@ let object = [
 ] as [String : Any]
 
 func create() -> Data {
-    return FlexBuffer.encodeInefficientButConvinient(object)
+    return FlexBuffer.encodeInefficientButConvenient(object)
 }
 
 let object2 = [

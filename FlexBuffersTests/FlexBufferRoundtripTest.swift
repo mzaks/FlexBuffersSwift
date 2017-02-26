@@ -86,7 +86,7 @@ class FlexBufferRoundtripTest: XCTestCase {
     }
     
     func test3(){
-        let data = FlexBuffer.encodeInefficientButConvinient([
+        let data = FlexBuffer.encodeInefficientButConvenient([
             "age" : 35,
             "flags" : [true, false, true, true],
             "weight" : 72.5,
@@ -113,7 +113,7 @@ class FlexBufferRoundtripTest: XCTestCase {
     
     
     func test4(){
-        let data = FlexBuffer.encodeInefficientButConvinient([
+        let data = FlexBuffer.encodeInefficientButConvenient([
             "location" : "http://google.com/flatbuffers/",
             "initialized" : true,
             "fruit" : 2,

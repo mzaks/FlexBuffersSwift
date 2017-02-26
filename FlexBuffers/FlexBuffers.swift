@@ -666,7 +666,7 @@ public class FlexBuffer {
 }
 
 extension FlexBuffer {
-    public static func encodeInefficientButConvinient(_ v: Any) -> Data {
+    public static func encodeInefficientButConvenient(_ v: Any) -> Data {
         let builder = FlexBuffer()
         builder.handleValue(v)
         return builder.finish()
