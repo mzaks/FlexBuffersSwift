@@ -119,129 +119,22 @@ enum FlexBufferEncodeError: Error {
 
 public class FlexBuffer {
     
-    public func addNull(){
-        null()
-    }
+    let initialSize : Int
+    var currentSize : Int
+    let options : BuilderOptions
+    var finished = false
+    var buffer : UnsafeMutableRawPointer
+    var offset : Int
+    private var stack : [Value] = []
+    var keyPool : [String:Int] = [:]
+    var stringPool : [String:Int] = [:]
     
-    public func addValue<T : FlxbValue>(_ v : T){
-        switch v {
-        case let v as Bool:
-            bool(v)
-        case let v as UnsignedInteger:
-            uint(v.toUIntMax())
-        case let v as SignedInteger:
-            int(v.toIntMax())
-        case let v as Float:
-            float(v)
-        case let v as Double:
-            double(v)
-        case let v as String:
-            string(v)
-        default:
-            assertionFailure("Unexpected FlxValue type added \(type(of: v))")
-            break
-        }
-    }
-    
-    public func addValue<T : FlxbValue>(keyString : String, value : T){
-        self.key(keyString)
-        switch value {
-        case let v as Bool:
-            bool(v)
-        case let v as UnsignedInteger:
-            uint(v.toUIntMax())
-        case let v as SignedInteger:
-            int(v.toIntMax())
-        case let v as Float:
-            float(v)
-        case let v as Double:
-            double(v)
-        case let v as String:
-            string(v)
-        default:
-            assertionFailure("Unexpected FlxValue type added \(type(of: value))")
-            break
-        }
-    }
-    public func addValue<T : FlxbValue>(key : StaticString, value : T){
-        self.key(key)
-        switch value {
-        case let v as Bool:
-            bool(v)
-        case let v as UnsignedInteger:
-            uint(v.toUIntMax())
-        case let v as SignedInteger:
-            int(v.toIntMax())
-        case let v as Float:
-            float(v)
-        case let v as Double:
-            double(v)
-        case let v as String:
-            string(v)
-        default:
-            assertionFailure("Unexpected FlxValue type added \(type(of: value))")
-            break
-        }
-    }
-    
-    public func addArray<T : FlxbScalarValue>(_ vs : [T]){
-        let start = startVector()
-        for v in vs {
-            addValue(v)
-        }
-        _ = endVector(start: start, typed: true, fixed: false)
-    }
-    
-    public func untypedVector(_ array : NSArray){
-        let start = startVector()
-        for v in array {
-            handleValue(v)
-        }
-        _ = endVector(start: start, typed: false, fixed: false)
-    }
-    
-    public func untypedMap(_ dict : NSDictionary){
-        let start = startMap()
-        for v in dict {
-            if let key = v.key as? String {
-                self.key(key)
-            }
-            handleValue(v.value)
-        }
-        endMap(start: start)
-    }
-    
-    fileprivate func handleValue(_ v : Any){
-        switch v {
-        case let v as Bool:
-            bool(v)
-        case let v as UnsignedInteger:
-            uint(v.toUIntMax())
-        case let v as SignedInteger:
-            int(v.toIntMax())
-        case let v as UInt:     // because of NSNumber I suppose :(
-            uint(UIntMax(v))
-        case let v as Int:      // because of NSNumber I suppose :(
-            int(IntMax(v))
-        case let v as Float:
-            float(v)
-        case let v as Double:
-            double(v)
-        case let v as String:
-            string(v)
-        case let v as NSNumber:      // because of NSNumber I suppose :(
-            int(IntMax(v))
-        case let v as NSDictionary:
-            untypedMap(v)
-        case let v as NSArray:
-            untypedVector(v)
-        case _ as NSNull:
-            addNull()
-        default:
-            assertionFailure("Unexpected FlxValue type added \(type(of: v))")
-            break
-        }
-
+    public init(initialSize : Int = 2048, options : BuilderOptions = []) {
+        self.initialSize = initialSize
+        self.currentSize = initialSize
+        self.options = options
+        buffer = UnsafeMutableRawPointer.allocate(bytes: initialSize, alignedTo: 1)
+        offset = 0
     }
     
     public func addVector(_ f : ()->()){
@@ -363,12 +256,13 @@ public class FlexBuffer {
             return packedType(width: storedWidth(bitWidth: width), type: type)
         }
         
+        static let widths = [UInt8(1), UInt8(2), UInt8(4), UInt8(8)]
+        
         func elementWidth(size : Int, index : Int) -> BitWidth {
             if type.isInline {
                 return minBitWidth
             } else {
-                // TODO: Ask Wouter
-                for width in [UInt8(1), UInt8(2), UInt8(4), UInt8(8)] {
+                for width in Value.widths {
                     let offset_loc = size + paddingSize(bufSize: size, scalarSize: width) + index * Int(width)
                     let offset = offset_loc - Int(value.asInt)
                     let bit_width = BitWidth.width(int: Int64(offset))
@@ -380,60 +274,66 @@ public class FlexBuffer {
                 return .width64
             }
         }
-        
-        
     }
     
-    let initialSize : Int
-    let options : BuilderOptions
-    var finished = false
-    var buffer : [UInt8]
-    private var stack : [Value] = []
-    var keyPool : [String:Int] = [:]
-    var stringPool : [String:Int] = [:]
-    
-    init(initialSize : Int = 256, options : BuilderOptions = []) {
-        self.initialSize = initialSize
-        self.options = options
-        buffer = []
-    }
-    
-    func null() {
+    fileprivate func null() {
         stack.append(Value())
     }
     
-    func int(_ i : IntMax) {
+    fileprivate func int(_ i : Int64) {
+        stack.append(Value(value: i, type: .int, bitWidth: BitWidth.width(int: i)))
+    }
+    
+    fileprivate func int(_ i : Int) {
         stack.append(Value(value: Int64(i), type: .int, bitWidth: BitWidth.width(int: Int64(i))))
     }
     
-    func uint(_ i : UIntMax) {
+    fileprivate func uint(_ i : UInt64) {
+        stack.append(Value(value: i, type: .uint, bitWidth: BitWidth.width(uint: i)))
+    }
+    
+    fileprivate func uint(_ i : UInt) {
         stack.append(Value(value: UInt64(i), type: .uint, bitWidth: BitWidth.width(uint: UInt64(i))))
     }
     
-    func float(_ f : Float) {
+    fileprivate func float(_ f : Float) {
         stack.append(Value(value: f))
     }
     
-    func double(_ d : Double) {
+    fileprivate func double(_ d : Double) {
         stack.append(Value(value: d))
     }
     
-    func bool(_ b : Bool) {
+    fileprivate func bool(_ b : Bool) {
         b ? int(1) : int(0)
     }
     
-    func string(_ s : String) {
-//        let chars = s.utf8CString.map({UInt8($0)})
-//        createBlob(data: chars, length: chars.count - 1, trailing: 1, type: .string)
-        
+    fileprivate func string(_ s : String) {
         let chars = s.utf8CString
         let length = chars.count - 1
         let bitWidth = BitWidth.width(uint: UInt64(length))
         let byteWidth = align(width: bitWidth)
         write(value: length, size: byteWidth)
-        let sloc = buffer.count
+        let sloc = offset
         for c in chars {
-            self.buffer.append(UInt8(c))
+            write(value: c, size: 1)
+        }
+        stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
+    }
+    
+    fileprivate func string(_ s : StaticString) {
+        var sloc = offset
+        let bitWidth = s.withUTF8Buffer { (buffer) -> BitWidth in
+            let length = buffer.count
+            let bitWidth = BitWidth.width(uint: UInt64(length))
+            let byteWidth = align(width: bitWidth)
+            write(value: length, size: byteWidth)
+            sloc = offset
+            for c in buffer {
+                write(value: c, size: 1)
+            }
+            write(value: UInt8(0), size: 1)
+            return bitWidth
         }
         stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
     }
@@ -443,9 +343,9 @@ public class FlexBuffer {
         if options.contains(.shareKeys), let index = keyPool[s] {
             sloc = index
         } else {
-            sloc = buffer.count
+            sloc = offset
             for c in s.utf8CString {
-                self.buffer.append(UInt8(c))
+                write(value: c, size: 1)
             }
             if options.contains(.shareKeys) {
                 keyPool[s] = sloc
@@ -456,72 +356,120 @@ public class FlexBuffer {
     }
     
     fileprivate func key(_ s : StaticString) {
-        let sd = s.description
         let sloc : Int
-        if options.contains(.shareKeys), let index = keyPool[sd] {
-            sloc = index
-        } else {
-            sloc = buffer.count
+        if options.contains(.shareKeys) == false {
+            sloc = offset
             s.withUTF8Buffer {
                 for c in $0 {
-                    buffer.append(c)
+                    write(value: c, size: 1)
                 }
-                self.buffer.append(0)
+                write(value: UInt8(0), size: 1)
             }
-            if options.contains(.shareKeys) {
+        } else {
+            let sd = s.description
+            
+            if let index = keyPool[sd] {
+                sloc = index
+            } else {
+                sloc = offset
+                s.withUTF8Buffer {
+                    for c in $0 {
+                        write(value: c, size: 1)
+                    }
+                    write(value: UInt8(0), size: 1)
+                }
                 keyPool[sd] = sloc
             }
         }
         
+        
         stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
     }
     
-    fileprivate func pushIndirect<T : FlxbBigScalarValue>(_ val : T) throws {
-        let type : Type
-        let bitWidth : BitWidth
-        switch val {
-        case let v as Int64 :
-            type = .indirect_int
-            bitWidth = BitWidth.width(int: v)
-        case let v as UInt64 :
-            type = .indirect_uint
-            bitWidth = BitWidth.width(uint: v)
-        case _ as Float :
-            type = .indirect_float
-            bitWidth = .width32
-        case _ as Double :
-            type = .indirect_float
-            bitWidth = .width64
-        default:
-            throw FlexBufferEncodeError.unexpectedType
-        }
+    fileprivate func pushIndirect(_ val : Float) {
+        let type = Type.indirect_float
+        let bitWidth = BitWidth.width32
         let byteWitdth = align(width: bitWidth)
-        let iloc = buffer.count
+        let iloc = offset
+        write(value: val, size: byteWitdth)
+        stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
+    }
+    
+    fileprivate func pushIndirect(_ val : Double) {
+        let type = Type.indirect_float
+        let bitWidth = BitWidth.width(double: val)
+        let byteWitdth = align(width: bitWidth)
+        let iloc = offset
+        write(value: val, size: byteWitdth)
+        stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
+    }
+    
+    fileprivate func pushIndirect(_ val : Int) {
+        let type = Type.indirect_int
+        let bitWidth = BitWidth.width(int: Int64(val))
+        let byteWitdth = align(width: bitWidth)
+        let iloc = offset
+        write(value: val, size: byteWitdth)
+        stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
+    }
+    
+    fileprivate func pushIndirect(_ val : Int64) {
+        let type = Type.indirect_int
+        let bitWidth = BitWidth.width(int: val)
+        let byteWitdth = align(width: bitWidth)
+        let iloc = offset
+        write(value: val, size: byteWitdth)
+        stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
+    }
+    
+    fileprivate func pushIndirect(_ val : UInt) {
+        let type = Type.indirect_uint
+        let bitWidth = BitWidth.width(uint: UInt64(val))
+        let byteWitdth = align(width: bitWidth)
+        let iloc = offset
+        write(value: val, size: byteWitdth)
+        stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
+    }
+    
+    fileprivate func pushIndirect(_ val : UInt64) {
+        let type = Type.indirect_uint
+        let bitWidth = BitWidth.width(uint: val)
+        let byteWitdth = align(width: bitWidth)
+        let iloc = offset
         write(value: val, size: byteWitdth)
         stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
     }
     
     private func align(width : BitWidth) -> UInt8 {
         let byteWidth = 1 << width.rawValue
-        let paddingCount = paddingSize(bufSize: buffer.count, scalarSize: byteWidth)
-        buffer += [UInt8](repeating: 0, count: paddingCount)
+        offset += paddingSize(bufSize: offset, scalarSize: byteWidth)
         return byteWidth
     }
     
-    func write<T>(value : T, size : UInt8) {
+    fileprivate func write<T>(value : T, size : UInt8) {
         var v = value
-        withUnsafeBytes(of: &v) {
-            buffer += $0[0..<Int(size)]
+        let newOffest = offset + Int(size)
+        let prevSize = currentSize
+        while currentSize < newOffest {
+            currentSize = currentSize << 1
         }
+        if prevSize < currentSize {
+            let prevBuffer = buffer
+            buffer = UnsafeMutableRawPointer.allocate(bytes: currentSize, alignedTo: 1)
+            buffer.copyBytes(from: prevBuffer, count: offset)
+            prevBuffer.deallocate(bytes: prevSize, alignedTo: 1)
+        }
+        buffer.advanced(by: offset).copyBytes(from: &v, count: Int(size))
+        offset = newOffest
     }
     
-    func writeOffset(value : UInt64, size : UInt8) {
-        let reloff = UInt64(buffer.count) - value
+    fileprivate func writeOffset(value : UInt64, size : UInt8) {
+        let reloff = UInt64(offset) - value
         assert(size == 8 || reloff < UInt64(1 << UInt64(size * 8)))
         write(value: reloff, size: size)
     }
     
-    func writeDouble(value : Double, size : UInt8){
+    fileprivate func writeDouble(value : Double, size : UInt8){
         switch size {
         case 8:
             write(value: value, size: size)
@@ -551,27 +499,29 @@ public class FlexBuffer {
         let bitWidth = BitWidth.width(uint: UInt64(length))
         let byteWidth = align(width: bitWidth)
         write(value: length, size: byteWidth)
-        let sloc = buffer.count
-        self.buffer += data
+        let sloc = offset
+        for d in data {
+            write(value: d, size: 1)
+        }
         stack.append(Value(value: UInt64(sloc), type: type, bitWidth: bitWidth))
     }
     
-    func startVector() -> Int {
+    fileprivate func startVector() -> Int {
         return stack.count
     }
     
-    func startMap() -> Int {
+    fileprivate func startMap() -> Int {
         return stack.count
     }
     
-    func endVector(start : Int, typed : Bool, fixed : Bool) -> Int {
+    fileprivate func endVector(start : Int, typed : Bool, fixed : Bool) -> Int {
         let vec = creteVector(start: start, vecLen: stack.count - start, step: 1, typed: typed, fixed: fixed)
         stack.removeLast(stack.count - start)
         stack.append(vec)
         return Int(vec.value.asUInt)
     }
     
-    func endMap(start : Int) {
+    fileprivate func endMap(start : Int) {
         var len = stack.count - start
         assert((len % 2) == 0, "We should have interleaved keys and values on the stack. Make sure it is an even number")
         len /= 2
@@ -584,7 +534,7 @@ public class FlexBuffer {
             }
             if shouldFilp(stack[i], stack[i+2]) {
                 sorted = false
-                break
+                // don't break because of the assert
             }
         }
         if sorted == false {
@@ -627,8 +577,8 @@ public class FlexBuffer {
         
         
         repeat {
-            c1 = buffer[Int(v1.value.asInt + index)]
-            c2 = buffer[Int(v2.value.asInt + index)]
+            c1 = buffer.load(fromByteOffset: Int(v1.value.asInt + index), as: UInt8.self)//buffer[Int(v1.value.asInt + index)]
+            c2 = buffer.load(fromByteOffset: Int(v2.value.asInt + index), as: UInt8.self)//buffer[Int(v2.value.asInt + index)]
             if c2 < c1 {
                 return true
             } else if c1 < c2 {
@@ -649,14 +599,14 @@ public class FlexBuffer {
         if let keys = keys {
             // If this vector is part of a map, we will pre-fix an offset to the keys
             // to this vector.
-            let elemWidth = keys.elementWidth(size: buffer.count, index: 0)
+            let elemWidth = keys.elementWidth(size: offset, index: 0)
             bitWidth = BitWidth(rawValue: max(bitWidth.rawValue, elemWidth.rawValue))! // FIXME:
             prefixElems += 2
         }
         
         var vectorType = Type.key
         for i in stride(from: start, to: stack.count, by: step) {
-            let elemWidth = stack[i].elementWidth(size: buffer.count, index: i + prefixElems)
+            let elemWidth = stack[i].elementWidth(size: offset, index: i + prefixElems)
             bitWidth = BitWidth(rawValue: max(bitWidth.rawValue, elemWidth.rawValue))! // FIXME:
             if typed {
                 if i == start {
@@ -677,14 +627,14 @@ public class FlexBuffer {
             write(value: vecLen, size: byteWidth)
         }
         // Then the actual data.
-        let vloc = buffer.count
+        let vloc = offset
         for i in stride(from: start, to: stack.count, by: step) {
             write(flxvalue: stack[i], width: byteWidth)
         }
         // Then the types.
         if !typed {
             for i in stride(from: start, to: stack.count, by: step) {
-                buffer.append(stack[i].storedPackedType(width: bitWidth))
+                write(value: stack[i].storedPackedType(width: bitWidth), size: 1)
             }
         }
         
@@ -697,155 +647,389 @@ public class FlexBuffer {
                      bitWidth: bitWidth)
     }
     
-    public func finish() {
+    public func finish() -> Data {
         assert(stack.count == 1, "you likely have objects that were never included in a parent. You need to have exactly one root to finish a buffer. Check your Start/End calls are matched, and all objects are inside some other object.")
         
-        let byteWidth = align(width: stack[0].elementWidth(size: buffer.count, index: 0))
+        let byteWidth = align(width: stack[0].elementWidth(size: offset, index: 0))
         write(flxvalue: stack[0], width: byteWidth)
         write(value: stack[0].storedPackedType(), size: 1)
         write(value: byteWidth, size: 1)
         
-        finished = true
+        let data = Data(bytes:buffer, count: offset)
+        offset = 0
+        if options.contains(.shareKeys){
+            keyPool.removeAll(keepingCapacity: true)
+        }
+        
+        return data
     }
 }
 
-public protocol FlxbValue {}
-public protocol FlxbScalarValue : FlxbValue {}
-public protocol FlxbBigScalarValue : FlxbScalarValue {}
-
-
-extension Bool : FlxbScalarValue {}
-extension UInt8 : FlxbScalarValue {}
-extension Int8 : FlxbScalarValue {}
-extension UInt16 : FlxbScalarValue {}
-extension Int16 : FlxbScalarValue {}
-extension UInt32 : FlxbScalarValue {}
-extension Int32 : FlxbScalarValue {}
-extension UInt64 : FlxbBigScalarValue {}
-extension Int64 : FlxbBigScalarValue {}
-extension UInt : FlxbScalarValue {}
-extension Int : FlxbScalarValue {}
-extension Float : FlxbBigScalarValue {}
-extension Double : FlxbBigScalarValue {}
-extension String : FlxbValue {}
-
-public protocol FlexBufferVectorBuilder {
-    func add(_ v : Any) throws
-    func add<T : FlxbBigScalarValue>(indirectValue v : T) throws
-    func vector(_ f : (FlexBufferVectorBuilder) throws -> ()) throws
-    func map(_ f : (FlexBufferMapBuilder) throws -> ()) throws
-}
-
-extension FlexBuffer : FlexBufferVectorBuilder {
-    public func add(_ v: Any) throws {
-        handleValue(v)
-    }
-    
-    public func add<T : FlxbBigScalarValue>(indirectValue v: T) throws {
-        try self.pushIndirect(v)
-    }
-    
-    public func map(_ f: (FlexBufferMapBuilder) throws -> ()) throws {
-        let start = self.startMap()
-        try f(self)
-        _ = self.endMap(start: start)
-    }
-    
-    public func vector(_ f: (FlexBufferVectorBuilder) throws -> ()) throws {
-        let start = self.startVector()
-        try f(self)
-        _ = self.endVector(start: start, typed: false, fixed: false)
-    }
-}
-
-public protocol FlexBufferMapBuilder {
-    func add(key : String, value : Any) throws
-    func add(key : StaticString, value : Any) throws
-    func add<T : FlxbBigScalarValue>(key : String, indirectValue : T) throws
-    func add<T : FlxbBigScalarValue>(key : StaticString, indirectValue : T) throws
-    func vector(key : String, _ f : (FlexBufferVectorBuilder) throws -> ()) throws
-    func vector(key : StaticString, _ f : (FlexBufferVectorBuilder) throws -> ()) throws
-    func map(key : String, _ f : (FlexBufferMapBuilder) throws -> ()) throws
-    func map(key : StaticString, _ f : (FlexBufferMapBuilder) throws -> ()) throws
-}
-
-extension FlexBuffer : FlexBufferMapBuilder {
-    public func add<T : FlxbBigScalarValue>(key: String, indirectValue: T) throws {
-        self.key(key)
-        try pushIndirect(indirectValue)
-    }
-    public func add<T : FlxbBigScalarValue>(key: StaticString, indirectValue: T) throws {
-        self.key(key)
-        try pushIndirect(indirectValue)
-    }
-    public func add(key: String, value: Any) throws {
-        self.key(key)
-        handleValue(value)
-    }
-    public func add(key: StaticString, value: Any) throws {
-        self.key(key)
-        handleValue(value)
-    }
-    public func map(key: String, _ f: (FlexBufferMapBuilder) throws -> ()) throws {
-        self.key(key)
-        let start = self.startMap()
-        try f(self)
-        _ = self.endMap(start: start)
-    }
-    public func map(key: StaticString, _ f: (FlexBufferMapBuilder) throws -> ()) throws {
-        self.key(key)
-        let start = self.startMap()
-        try f(self)
-        _ = self.endMap(start: start)
-    }
-    public func vector(key: String, _ f: (FlexBufferVectorBuilder) throws -> ()) throws {
-        self.key(key)
-        let start = self.startVector()
-        try f(self)
-        _ = self.endVector(start: start, typed: false, fixed: false)
-    }
-    public func vector(key: StaticString, _ f: (FlexBufferVectorBuilder) throws -> ()) throws {
-        self.key(key)
-        let start = self.startVector()
-        try f(self)
-        _ = self.endVector(start: start, typed: false, fixed: false)
-    }
-}
-
-public protocol FlexBufferEncoder {
-    static func encode(_ v : Any) throws -> Data
-    static func encode<T : FlxbScalarValue>(typedArray vs : [T]) throws -> Data
-    static func encodeVector(_ f : (FlexBufferVectorBuilder) throws -> ()) throws -> Data
-    static func encodeMap(_ f : (FlexBufferMapBuilder) throws -> ()) throws -> Data
-}
-
-extension FlexBuffer : FlexBufferEncoder {
-    public static func encodeMap(_ f: (FlexBufferMapBuilder) throws -> ()) throws -> Data {
-        let builder = FlexBuffer()
-        try builder.map(f)
-        builder.finish()
-        return Data(bytes: builder.buffer)
-    }
-
-    public static func encodeVector(_ f: (FlexBufferVectorBuilder) throws -> ()) throws -> Data {
-        let builder = FlexBuffer()
-        try builder.vector(f)
-        builder.finish()
-        return Data(bytes: builder.buffer)
-    }
-
-    public static func encode<T : FlxbScalarValue>(typedArray vs : [T]) throws -> Data {
-        let builder = FlexBuffer()
-        builder.addArray(vs)
-        builder.finish()
-        return Data(bytes: builder.buffer)
-    }
-
-    public static func encode(_ v: Any) throws -> Data {
+extension FlexBuffer {
+    public static func encodeInefficientButConvinient(_ v: Any) -> Data {
         let builder = FlexBuffer()
         builder.handleValue(v)
-        builder.finish()
-        return Data(bytes: builder.buffer)
+        return builder.finish()
+    }
+    
+    fileprivate func addUntypedArray(_ array : NSArray){
+        let start = startVector()
+        for v in array {
+            handleValue(v)
+        }
+        _ = endVector(start: start, typed: false, fixed: false)
+    }
+    
+    fileprivate func addUntypedMap(_ dict : NSDictionary){
+        let start = startMap()
+        for v in dict {
+            if let key = v.key as? String {
+                self.key(key)
+            }
+            handleValue(v.value)
+        }
+        endMap(start: start)
+    }
+    
+    fileprivate func handleValue(_ v : Any){
+        switch v {
+        case let v as Bool:
+            bool(v)
+        case let v as UnsignedInteger:
+            uint(v.toUIntMax())
+        case let v as SignedInteger:
+            int(v.toIntMax())
+        case let v as UInt:     // because of NSNumber I suppose :(
+            uint(UIntMax(v))
+        case let v as Int:      // because of NSNumber I suppose :(
+            int(IntMax(v))
+        case let v as Float:
+            float(v)
+        case let v as Double:
+            double(v)
+        case let v as String:
+            string(v)
+        case let v as NSNumber:      // because of NSNumber I suppose :(
+            int(IntMax(v))
+        case let v as NSDictionary:
+            addUntypedMap(v)
+        case let v as NSArray:
+            addUntypedArray(v)
+        case _ as NSNull:
+            addNull()
+        default:
+            assertionFailure("Unexpected FlxValue type added \(type(of: v))")
+            break
+        }
+        
+    }
+}
+
+// MARK: - addMethod for Primitives
+
+public extension FlexBuffer {
+    public func addNull(){
+        null()
+    }
+    public func add(value v : Bool){
+        bool(v)
+    }
+    public func add(keyString : String, value v : Bool){
+        self.key(keyString)
+        bool(v)
+    }
+    public func add(key : StaticString, value v : Bool){
+        self.key(key)
+        bool(v)
+    }
+    public func add(array vs : [Bool]){
+        let start = startVector()
+        for v in vs {
+            bool(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [Bool]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [Bool]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : Int){
+        int(v)
+    }
+    public func add(keyString : String, value v : Int){
+        self.key(keyString)
+        int(v)
+    }
+    public func add(key : StaticString, value v : Int){
+        self.key(key)
+        int(v)
+    }
+    public func add(indirectValue v : Int){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : Int){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : Int){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [Int]){
+        let start = startVector()
+        for v in vs {
+            int(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [Int]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [Int]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : Int64){
+        int(v)
+    }
+    public func add(keyString : String, value v : Int64){
+        self.key(keyString)
+        int(v)
+    }
+    public func add(key : StaticString, value v : Int64){
+        self.key(key)
+        int(v)
+    }
+    public func add(indirectValue v : Int64){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : Int64){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : Int64){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [Int64]){
+        let start = startVector()
+        for v in vs {
+            int(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [Int64]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [Int64]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : UInt){
+        uint(v)
+    }
+    public func add(keyString : String, value v : UInt){
+        self.key(keyString)
+        uint(v)
+    }
+    public func add(key : StaticString, value v : UInt){
+        self.key(key)
+        uint(v)
+    }
+    public func add(indirectValue v : UInt){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : UInt){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : UInt){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [UInt]){
+        let start = startVector()
+        for v in vs {
+            uint(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [UInt]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [UInt]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : UInt64){
+        uint(v)
+    }
+    public func add(keyString : String, value v : UInt64){
+        self.key(keyString)
+        uint(v)
+    }
+    public func add(key : StaticString, value v : UInt64){
+        self.key(key)
+        uint(v)
+    }
+    public func add(indirectValue v : UInt64){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : UInt64){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : UInt64){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [UInt64]){
+        let start = startVector()
+        for v in vs {
+            uint(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [UInt64]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [UInt64]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : Float){
+        float(v)
+    }
+    public func add(keyString : String, value v : Float){
+        self.key(keyString)
+        float(v)
+    }
+    public func add(key : StaticString, value v : Float){
+        self.key(key)
+        float(v)
+    }
+    public func add(indirectValue v : Float){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : Float){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : Float){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [Float]){
+        let start = startVector()
+        for v in vs {
+            float(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [Float]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [Float]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : Double){
+        double(v)
+    }
+    public func add(keyString : String, value v : Double){
+        self.key(keyString)
+        double(v)
+    }
+    public func add(key : StaticString, value v : Double){
+        self.key(key)
+        double(v)
+    }
+    public func add(indirectValue v : Double){
+        pushIndirect(v)
+    }
+    public func add(keyString : String, indirectValue v : Double){
+        self.key(keyString)
+        pushIndirect(v)
+    }
+    public func add(key : StaticString, indirectValue v : Double){
+        self.key(key)
+        pushIndirect(v)
+    }
+    public func add(array vs : [Double]){
+        let start = startVector()
+        for v in vs {
+            double(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [Double]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [Double]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(stringValue v : String){
+        string(v)
+    }
+    public func add(keyString : String, stringValue v : String){
+        self.key(keyString)
+        string(v)
+    }
+    public func add(key : StaticString, stringValue v : String){
+        self.key(key)
+        string(v)
+    }
+    public func add(array vs : [String]){
+        let start = startVector()
+        for v in vs {
+            string(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [String]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [String]){
+        self.key(key)
+        add(array:vs)
+    }
+    public func add(value v : StaticString){
+        string(v)
+    }
+    public func add(keyString : String, value v : StaticString){
+        self.key(keyString)
+        string(v)
+    }
+    public func add(key : StaticString, value v : StaticString){
+        self.key(key)
+        string(v)
+    }
+    public func add(array vs : [StaticString]){
+        let start = startVector()
+        for v in vs {
+            string(v)
+        }
+        _ = endVector(start: start, typed: true, fixed: false)
+    }
+    public func add(keyString : String, value vs : [StaticString]){
+        self.key(keyString)
+        add(array:vs)
+    }
+    public func add(key : StaticString, value vs : [StaticString]){
+        self.key(key)
+        add(array:vs)
     }
 }
 
@@ -909,7 +1093,7 @@ fileprivate func _indirect(pointer : UnsafeRawPointer, width : UInt8) -> UnsafeR
 }
 
 
-public struct FlxbReference {
+public struct FlxbReference : CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let parentWidth : UInt8
     fileprivate let byteWidth : UInt8
@@ -1037,6 +1221,28 @@ public struct FlxbReference {
         }
     }
     
+    public var count : Int? {
+        switch type {
+        case .string :
+            if let p = self.indirect {
+                return FlxbString(dataPointer: p, byteWidth: byteWidth).count
+            }
+            return nil
+        case .vector :
+            if let p = self.indirect {
+                return FlxbVector(dataPointer: p, byteWidth: byteWidth, type: type.typedVectorElementType).count
+            }
+            return nil
+        case .map :
+            if let p = self.indirect {
+                return FlxbMap(dataPointer: p, byteWidth: byteWidth).count
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+    
     fileprivate var asPointer : UnsafeRawPointer? {
         switch type {
         case .key :
@@ -1079,6 +1285,34 @@ public struct FlxbReference {
     private var indirect : UnsafeRawPointer? {
         return _indirect(pointer: dataPointer, width: parentWidth)
     }
+    
+    public var debugDescription: String {
+        if let v = asInt {
+            return "\(v)"
+        }
+        if let v = asUInt {
+            return "\(v)"
+        }
+        if let v = asBool {
+            return "\(v)"
+        }
+        if let v = asFloat {
+            return "\(v)"
+        }
+        if let v = asDouble {
+            return "\(v)"
+        }
+        if let v = asString {
+            return "\"\(v)\""
+        }
+        if let v = asMap {
+            return v.debugDescription
+        }
+        if let v = asVector {
+            return v.debugDescription
+        }
+        return "---Unexpected Type---"
+    }
 }
 
 public struct FlxbString {
@@ -1096,7 +1330,7 @@ public struct FlxbString {
     }
 }
 
-public struct FlxbVector : Sequence {
+public struct FlxbVector : Sequence, CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let byteWidth : UInt8
     fileprivate let type : Type?
@@ -1150,9 +1384,22 @@ public struct FlxbVector : Sequence {
             return value
         }
     }
+    
+    public var debugDescription: String {
+        var values : [String] = []
+        for i in 0..<count {
+            if let v = self[i] {
+                values.append(v.debugDescription)
+            } else {
+                values.append("null")
+            }
+        }
+        let list = values.joined(separator: ", ")
+        return "[\(list)]"
+    }
 }
 
-public struct FlxbMap : Sequence {
+public struct FlxbMap : Sequence, CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let byteWidth : UInt8
     
@@ -1254,6 +1501,7 @@ public struct FlxbMap : Sequence {
                 let c1 = CChar(key1.advanced(by: index).pointee)
                 let c2 = key2.load(fromByteOffset: index, as: CChar.self)
                 let c = c1 &- c2
+                
                 if c != 0 {
                     return c
                 }
@@ -1303,6 +1551,15 @@ public struct FlxbMap : Sequence {
             return nil
         }
     }
+    
+    public var debugDescription: String {
+        if let keys = keys?.map({$0.debugDescription}), let values = values?.map({$0.debugDescription}) {
+            let pairs = zip(keys, values)
+            let list = pairs.map({"\($0) : \($1)"})
+            return "{\(list.joined(separator: ", "))}"
+        }
+        return "{\(keys.debugDescription) : \(values.debugDescription)}"
+    }
 }
 
 public protocol FlexBufferDecoder {
@@ -1317,10 +1574,6 @@ extension FlexBuffer : FlexBufferDecoder {
         let byteWidth = data[data.count - 1]
         let packedType = data[data.count - 2]
         
-//        let p1 : UnsafeMutablePointer<UInt8> = UnsafeMutablePointer.allocate(capacity: data.count)
-//        let originalBuffer = UnsafeMutableBufferPointer(start: p1, count: data.count)
-//        _ = data.copyBytes(to: originalBuffer)
-//        let pointer = UnsafeRawPointer(p1)
         var pointer : UnsafePointer<UInt8>! = nil
         data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) in
             pointer = u8Ptr

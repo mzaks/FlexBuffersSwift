@@ -32,190 +32,161 @@ func getMegabytesUsed() -> Float? {
     return Float(info.resident_size) / (1024 * 1024)
 }
 
-
-func createContainer() throws -> Data {
-    return try FlexBuffer.encodeMap { b in
-        try b.add(key: "fruit" as StaticString, value: 2)
-        try b.add(key: "initialized" as StaticString, value: true)
-        try b.vector(key: "list" as StaticString){ b in
-            for i in 0..<3 { // 0xABADCAFEABADCAFE will overflow in usage
-                let ident : UInt64 = 0xABADCAFE + UInt64(i)
-                try b.map {
-                    try $0.add(key: "name" as StaticString, value: "Hello, World!")
-                    try $0.add(key: "postfix" as StaticString, value: UInt8(33 + i))
-                    try $0.add(key: "rating" as StaticString, indirectValue: 3.1415432432445543543+Double(i))
-                    try $0.map(key: "sibling" as StaticString, {
-                        try $0.map(key: "parent" as StaticString, {
-                            try $0.add(key: "count" as StaticString, value: 10000 + i)
-                            try $0.add(key: "id" as StaticString, indirectValue: ident)
-                            try $0.add(key: "length" as StaticString, value: UInt32(1000000 + i))
-                            try $0.add(key: "prefix" as StaticString, value: 64 + i)
-                        })
-                        try $0.add(key: "ratio" as StaticString, indirectValue: 3.14159 + Float(i))
-                        try $0.add(key: "size" as StaticString, value: UInt16(10000 + i))
-                        try $0.add(key: "time" as StaticString, value: 123456 + i)
-                    })
-                }
-            }
-        }
-        try b.add(key: "location" as StaticString, value: "http://google.com/flatbuffers/")
-    }
-}
-
-func createContainer2(flx : FlexBuffer) throws -> Data {
-    flx.finished = false
-    flx.buffer.removeAll(keepingCapacity: true)
-    flx.keyPool.removeAll(keepingCapacity: true)
+func createContainer(flx : FlexBuffer) throws -> Data {
     flx.addMap {
-        flx.addValue(key: "fruit", value:2)
-        flx.addValue(key: "initialized", value:true)
+        flx.add(key: "fruit", value:2)
+        flx.add(key: "initialized", value:true)
         flx.addVector(key:"list") {
             for i in 0..<3 {
                 let ident : UInt64 = 0xABADCAFE + UInt64(i)
                 flx.addMap {
-                    flx.addValue(key: "name", value: "Hello, World!")
-                    flx.addValue(key: "postfix", value: UInt8(33 + i))
-                    flx.addValue(key: "rating" , value: 3.1415432432445543543+Double(i))
+                    flx.add(key: "name", value: "Hello, World!")
+                    flx.add(key: "postfix", value: UInt(33 + i))
+                    flx.add(key: "rating" , indirectValue: 3.1415432432445543543+Double(i))
                     flx.addMap(key:"sibling") {
                         flx.addMap(key:"parent") {
-                            flx.addValue(key: "count", value: 10000 + i)
-                            flx.addValue(key: "id", value: ident)
-                            flx.addValue(key: "length", value: UInt32(1000000 + i))
-                            flx.addValue(key: "prefix", value: 64 + i)
+                            flx.add(key: "count", indirectValue: 10000 + i)
+                            flx.add(key: "id", indirectValue: ident)
+                            flx.add(key: "length", indirectValue: UInt(1000000 + i))
+                            flx.add(key: "prefix", value: 64 + i)
                         }
-                        flx.addValue(key: "ratio", value: 3.14159 + Float(i))
-                        flx.addValue(key: "size", value: UInt16(10000 + i))
-                        flx.addValue(key: "time", value: 123456 + i)
+                        flx.add(key: "ratio", indirectValue: 3.14159 + Float(i))
+                        flx.add(key: "size", indirectValue: UInt(10000 + i))
+                        flx.add(key: "time", indirectValue: 123456 + i)
                     }
                 }
             }
         }
-        flx.addValue(key: "location" as StaticString, value: "http://google.com/flatbuffers/")
+        flx.add(key: "location", value: "http://google.com/flatbuffers/")
     }
-    flx.finish()
-    return Data(bytes: flx.buffer)
+    return flx.finish()
 }
+
+let object = [
+    "list" : [
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(0),
+                    "count" : 10000 + 0,
+                    "prefix" : 64 + 0,
+                    "length" : UInt32(1000000 + 0)
+                ],
+                "time" : 123456 + 0,
+                "ratio" : 3.14159 + Float(0),
+                "size" : UInt16(10000 + 0)
+            ],
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(0),
+            "postfix" : UInt8(33 + 0)
+        ],
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(1),
+                    "count" : 10000 + 1,
+                    "prefix" : 64 + 1,
+                    "length" : UInt32(1000000 + 1)
+                ],
+                "time" : 123456 + 1,
+                "ratio" : 3.14159 + Float(1),
+                "size" : UInt16(10000 + 1)
+            ],
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(1),
+            "postfix" : UInt8(33 + 1)
+        ],
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(2),
+                    "count" : 10000 + 2,
+                    "prefix" : 64 + 2,
+                    "length" : UInt32(1000000 + 2)
+                ],
+                "time" : 123456 + 2,
+                "ratio" : 3.14159 + Float(2),
+                "size" : UInt16(10000 + 2)
+            ],
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(2),
+            "postfix" : UInt8(33 + 2)
+        ]
+    ],
+    "location" : "http://google.com/flatbuffers/",
+    "initialized" : true,
+    "fruit" : 2
+] as [String : Any]
 
 func create() -> Data {
-    return try! FlexBuffer.encode([
-        "list" : [
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(0),
-                        "count" : 10000 + 0,
-                        "prefix" : 64 + 0,
-                        "length" : UInt32(1000000 + 0)
-                    ],
-                    "time" : 123456 + 0,
-                    "ratio" : 3.14159 + Float(0),
-                    "size" : UInt16(10000 + 0)
-                ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(0),
-                "postfix" : UInt8(33 + 0)
-            ],
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(1),
-                        "count" : 10000 + 1,
-                        "prefix" : 64 + 1,
-                        "length" : UInt32(1000000 + 1)
-                    ],
-                    "time" : 123456 + 1,
-                    "ratio" : 3.14159 + Float(1),
-                    "size" : UInt16(10000 + 1)
-                ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(1),
-                "postfix" : UInt8(33 + 1)
-            ],
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(2),
-                        "count" : 10000 + 2,
-                        "prefix" : 64 + 2,
-                        "length" : UInt32(1000000 + 2)
-                    ],
-                    "time" : 123456 + 2,
-                    "ratio" : 3.14159 + Float(2),
-                    "size" : UInt16(10000 + 2)
-                ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(2),
-                "postfix" : UInt8(33 + 2)
-            ]
-        ],
-        "location" : "http://google.com/flatbuffers/",
-        "initialized" : true,
-        "fruit" : 2
-    ])
+    return FlexBuffer.encodeInefficientButConvinient(object)
 }
 
-func createJsonData() -> Data {
-    return try!JSONSerialization.data(withJSONObject: [
-        "list" : [
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(0),
-                        "count" : 10000 + 0,
-                        "prefix" : 64 + 0,
-                        "length" : UInt32(1000000 + 0)
-                    ],
-                    "time" : 123456 + 0,
-                    "ratio" : 3.14159 + Float(0),
-                    "size" : UInt16(10000 + 0)
+let object2 = [
+    "list" : [
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(0),
+                    "count" : 10000 + 0,
+                    "prefix" : 64 + 0,
+                    "length" : UInt32(1000000 + 0)
                 ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(0),
-                "postfix" : UInt8(33 + 0)
+                "time" : 123456 + 0,
+                "ratio" : 3.14159 + Float(0),
+                "size" : UInt16(10000 + 0)
             ],
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(1),
-                        "count" : 10000 + 1,
-                        "prefix" : 64 + 1,
-                        "length" : UInt32(1000000 + 1)
-                    ],
-                    "time" : 123456 + 1,
-                    "ratio" : 3.14159 + Float(1),
-                    "size" : UInt16(10000 + 1)
-                ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(1),
-                "postfix" : UInt8(33 + 1)
-            ],
-            [
-                "sibling" : [
-                    "parent" : [
-                        "id" : 0xABADCAFE + UInt64(2),
-                        "count" : 10000 + 2,
-                        "prefix" : 64 + 2,
-                        "length" : UInt32(1000000 + 2)
-                    ],
-                    "time" : 123456 + 2,
-                    "ratio" : 3.14159 + Float(2),
-                    "size" : UInt16(10000 + 2)
-                ],
-                "name" : "Hello, World!",
-                "rating" : 3.1415432432445543543+Double(2),
-                "postfix" : UInt8(33 + 2)
-            ]
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(0),
+            "postfix" : UInt8(33 + 0)
         ],
-        "location" : "http://google.com/flatbuffers/",
-        "initialized" : true,
-        "fruit" : 2
-        ], options: [])
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(1),
+                    "count" : 10000 + 1,
+                    "prefix" : 64 + 1,
+                    "length" : UInt32(1000000 + 1)
+                ],
+                "time" : 123456 + 1,
+                "ratio" : 3.14159 + Float(1),
+                "size" : UInt16(10000 + 1)
+            ],
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(1),
+            "postfix" : UInt8(33 + 1)
+        ],
+        [
+            "sibling" : [
+                "parent" : [
+                    "id" : 0xABADCAFE + UInt64(2),
+                    "count" : 10000 + 2,
+                    "prefix" : 64 + 2,
+                    "length" : UInt32(1000000 + 2)
+                ],
+                "time" : 123456 + 2,
+                "ratio" : 3.14159 + Float(2),
+                "size" : UInt16(10000 + 2)
+            ],
+            "name" : "Hello, World!",
+            "rating" : 3.1415432432445543543+Double(2),
+            "postfix" : UInt8(33 + 2)
+        ]
+    ],
+    "location" : "http://google.com/flatbuffers/",
+    "initialized" : true,
+    "fruit" : 2
+] as [String : Any]
+
+func createJsonData() -> Data {
+    return try!JSONSerialization.data(withJSONObject: object2, options: [])
 }
 
 private func use(_ data : Data, start : Int) -> Int
 {
     var sum:Int = Int(start)
     let root = FlexBuffer.decode(data: data)!.asMap!
+    
     sum = sum &+ root["location"]!.asString!.utf8.count
     sum = sum &+ root["fruit"]!.asInt!
     sum = sum &+ (root["initialized"]!.asBool! ? 1 : 0)
@@ -308,14 +279,17 @@ let NumberOfEncodings = 100_000
 
 var datas = [Data!](repeating: nil, count: NumberOfEncodings)
 var m = getMegabytesUsed()!
-var t = CFAbsoluteTimeGetCurrent()
 var d = 0.0
-let flx = FlexBuffer()
+
+var t = CFAbsoluteTimeGetCurrent()
+
+let flx = FlexBuffer(initialSize: 1, options: [])
 for i in 0 ..< NumberOfEncodings {
-    datas[i] = try!createContainer2(flx: flx) // try!createContainer() //
+    datas[i] = try!createContainer(flx: flx)
 }
 let data = datas[0]!
 d = CFAbsoluteTimeGetCurrent() - t
+print("Efficient encoding (x\(NumberOfEncodings)):")
 print("\(data) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
@@ -326,8 +300,11 @@ for i in 0 ..< NumberOfEncodings {
 }
 let data1 = datas1[0]!
 d = CFAbsoluteTimeGetCurrent() - t
+print("Inefficient encoding (x\(NumberOfEncodings)):")
 print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
+
+
 
 var datas2 = [Data!](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
@@ -336,6 +313,7 @@ for i in 0 ..< NumberOfEncodings {
 }
 let data2 = datas2[0]!
 d = CFAbsoluteTimeGetCurrent() - t
+print("JSON encoding (x\(NumberOfEncodings)):")
 print("\(data2) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
@@ -346,6 +324,7 @@ for i in 0 ..< NumberOfDecodings {
     sum += use(data, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) result of efficient encoding:")
 print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
@@ -356,6 +335,7 @@ for i in 0 ..< NumberOfDecodings {
     sum1 += use1(data1, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) result of inefficient encoding:")
 print("\(sum1) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
@@ -367,4 +347,5 @@ for i in 0 ..< NumberOfDecodings {
     sum2 += useJSON(data2, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) JSON:")
 print("\(sum2) in \(d) \(getMegabytesUsed()! - m) MB")
