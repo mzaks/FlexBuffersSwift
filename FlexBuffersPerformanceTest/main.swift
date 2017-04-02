@@ -182,6 +182,44 @@ func createJsonData() -> Data {
     return try!JSONSerialization.data(withJSONObject: object2, options: [])
 }
 
+func createFlatBufferContainer() -> Data {
+    let veclen = 3
+    var foobars = [FooBar](repeating: FooBar(), count: veclen)
+    
+    for i in 0..<veclen { // 0xABADCAFEABADCAFE will overflow in usage
+        let ident : UInt64 = 0xABADCAFE + UInt64(i)
+        let foo = Foo(id: ident, count: 10000 + i, prefix: 64 + i, length: UInt32(1000000 + i))
+        let bar = Bar(parent: foo, time: 123456 + i, ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
+        let name = "Hello, World!"
+        let foobar = FooBar(sibling: bar, name: name, rating: 3.1415432432445543543+Double(i), postfix: UInt8(33 + i))
+        foobars[i] = foobar
+    }
+    
+    let location = "http://google.com/flatbuffers/"
+    let foobarcontainer = FooBarContainer(list: foobars, initialized: true, fruit: Enum.Bananas, location: location)
+    
+    return try!foobarcontainer.makeData(withOptions: FlatBuffersBuilderOptions(initialCapacity: 380, uniqueStrings: false, uniqueTables: false, uniqueVTables: false, forceDefaults: false, nullTerminatedUTF8: true))
+}
+
+func createFlatBufferContainerWithoutDataDuplication() -> Data {
+    let veclen = 3
+    var foobars = [FooBar](repeating: FooBar(), count: veclen)
+    
+    for i in 0..<veclen { // 0xABADCAFEABADCAFE will overflow in usage
+        let ident : UInt64 = 0xABADCAFE + UInt64(i)
+        let foo = Foo(id: ident, count: 10000 + i, prefix: 64 + i, length: UInt32(1000000 + i))
+        let bar = Bar(parent: foo, time: 123456 + i, ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
+        let name = "Hello, World!"
+        let foobar = FooBar(sibling: bar, name: name, rating: 3.1415432432445543543+Double(i), postfix: UInt8(33 + i))
+        foobars[i] = foobar
+    }
+    
+    let location = "http://google.com/flatbuffers/"
+    let foobarcontainer = FooBarContainer(list: foobars, initialized: true, fruit: Enum.Bananas, location: location)
+    
+    return try!foobarcontainer.makeData(withOptions: FlatBuffersBuilderOptions(initialCapacity: 380, uniqueStrings: true, uniqueTables: true, uniqueVTables: true, forceDefaults: false, nullTerminatedUTF8: true))
+}
+
 private func use(_ data : Data, start : Int) -> Int
 {
     var sum:Int = Int(start)
@@ -274,6 +312,36 @@ private func useJSON(_ data : Data, start : Int) -> Int
     return sum
 }
 
+private func use3(_ reader : FlatBuffersMemoryReader, start : Int) -> Int
+{
+    var sum:Int = Int(start)
+    let foobarcontainer = FooBarContainer_Direct(reader)!
+    
+    sum = sum &+ Int(foobarcontainer.location!.count)
+    sum = sum &+ Int(foobarcontainer.fruit!.rawValue)
+    sum = sum &+ (foobarcontainer.initialized ? 1 : 0)
+    
+    for i in 0..<foobarcontainer.list.count {
+        let foobar = foobarcontainer.list[i]!
+        sum = sum &+ Int(foobar.name!.count)
+        sum = sum &+ Int(foobar.postfix)
+        sum = sum &+ Int(foobar.rating)
+        
+        let bar = foobar.sibling!
+        
+        sum = sum &+ Int(bar.ratio)
+        sum = sum &+ Int(bar.size)
+        sum = sum &+ Int(bar.time)
+        
+        let foo = bar.parent
+        sum = sum &+ Int(foo.count)
+        sum = sum &+ Int(foo.id)
+        sum = sum &+ Int(foo.length)
+        sum = sum &+ Int(foo.prefix)
+    }
+    return sum
+}
+
 let NumberOfDecodings = 100_000
 let NumberOfEncodings = 100_000
 
@@ -317,6 +385,27 @@ print("JSON encoding (x\(NumberOfEncodings)):")
 print("\(data2) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
+var datas3 = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
+for i in 0 ..< NumberOfEncodings {
+    datas3[i] = createFlatBufferContainer()
+}
+let data3 = datas3[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("FlatBuffers encoding (x\(NumberOfEncodings)):")
+print("\(data3) in \(d) \(getMegabytesUsed()! - m) MB")
+m = getMegabytesUsed()!
+
+var datas4 = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
+for i in 0 ..< NumberOfEncodings {
+    datas4[i] = createFlatBufferContainerWithoutDataDuplication()
+}
+let data4 = datas4[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("FlatBuffers encoding without data duplication (x\(NumberOfEncodings)):")
+print("\(data4) in \(d) \(getMegabytesUsed()! - m) MB")
+m = getMegabytesUsed()!
 
 t = CFAbsoluteTimeGetCurrent()
 var sum = 0
@@ -339,8 +428,6 @@ print("Decoding (x\(NumberOfDecodings)) result of inefficient encoding:")
 print("\(sum1) in \(d) \(getMegabytesUsed()! - m) MB")
 m = getMegabytesUsed()!
 
-
-
 t = CFAbsoluteTimeGetCurrent()
 var sum2 = 0
 for i in 0 ..< NumberOfDecodings {
@@ -349,3 +436,14 @@ for i in 0 ..< NumberOfDecodings {
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding (x\(NumberOfDecodings)) JSON:")
 print("\(sum2) in \(d) \(getMegabytesUsed()! - m) MB")
+m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+var sum3 = 0
+let reader = FlatBuffersMemoryReader(data: data3)
+for i in 0 ..< NumberOfDecodings {
+    sum3 += use3(reader, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) FlatBuffers:")
+print("\(sum3) in \(d) \(getMegabytesUsed()! - m) MB")

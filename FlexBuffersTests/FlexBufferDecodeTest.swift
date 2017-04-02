@@ -134,6 +134,15 @@ class FlexBufferDecodeTest: XCTestCase {
         XCTAssertEqual(v?[2]?.asString, "baz")
     }
     
+    func testReadTypedVectorOfStrings() {
+        let data = Data(bytes: [3, 102, 111, 111, 0, 3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 3, 15, 11, 7, 3, 60, 1])
+        let v = FlexBuffer.decode(data: data)?.asVector
+        XCTAssertEqual(v?.count, 3)
+        XCTAssertEqual(v?[0]?.asString, "foo")
+        XCTAssertEqual(v?[1]?.asString, "bar")
+        XCTAssertEqual(v?[2]?.asString, "baz")
+    }
+    
     func testReadMixedVector() {
         let data = Data(bytes: [1, 61, 4, 2, 3, 64, 40, 4, 4, 40, 1])
         let v = FlexBuffer.decode(data: data)?.asVector

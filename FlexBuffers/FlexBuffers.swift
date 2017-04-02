@@ -38,7 +38,7 @@ fileprivate enum BitWidth : UInt8 {
 fileprivate enum Type : UInt8 {
     case null, int, uint, float,
     key, string, indirect_int, indirect_uint, indirect_float,
-    map, vector, vector_int, vector_uint, vector_float, vector_key,
+    map, vector, vector_int, vector_uint, vector_float, vector_key, vector_string,
     vector_int2, vector_uint2, vector_float2,
     vector_int3, vector_uint3, vector_float3,
     vector_int4, vector_uint4, vector_float4,
@@ -49,11 +49,11 @@ fileprivate enum Type : UInt8 {
     }
     
     var isTypedVectorElement : Bool {
-        return self.rawValue >= Type.int.rawValue && self.rawValue <= Type.key.rawValue
+        return self.rawValue >= Type.int.rawValue && self.rawValue <= Type.string.rawValue
     }
     
     var isTypedVector : Bool {
-        return self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_key.rawValue
+        return self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_string.rawValue
     }
     
     func toTypedVector(length : UInt8 = 0) -> Type {

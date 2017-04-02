@@ -256,9 +256,18 @@ class FlexBufferBuilderTests: XCTestCase {
         expect(["foo", "bar", "baz"], [3, 102, 111, 111, 0, 3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 3, 15, 11, 7, 20, 20, 20, 6, 40, 1])
     }
     
+    func testAddArrayOfStringsStrinc() {
+        expect(strings:["foo", "bar", "baz"], [3, 102, 111, 111, 0, 3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 3, 15, 11, 7, 3, 60, 1])
+    }
+    
     func testAddArrayOfFloats() {
         expect([4.5, 78.3, 29.2],
                [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 64, 51, 51, 51, 51, 51, 147, 83, 64, 51, 51, 51, 51, 51, 51, 61, 64, 15, 15, 15, 27, 43, 1])
+    }
+    
+    func testAddArrayOfInts() {
+        expect([4, 7, 29],
+               [3, 4, 7, 29, 4, 4, 4, 6, 40, 1])
     }
     
     func testAddMap() {
@@ -400,6 +409,14 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func expect(floats vs : [Float], _ data : [UInt8]){
+        let flx = FlexBuffer()
+        flx.add(array:vs)
+        let encodedData = flx.finish()
+        // then
+        XCTAssertEqual([UInt8](encodedData), data)
+    }
+    
+    func expect(strings vs : [String], _ data : [UInt8]){
         let flx = FlexBuffer()
         flx.add(array:vs)
         let encodedData = flx.finish()
