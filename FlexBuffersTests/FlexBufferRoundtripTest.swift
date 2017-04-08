@@ -169,5 +169,6 @@ class FlexBufferRoundtripTest: XCTestCase {
         XCTAssertEqual(v["initialized"]?.asBool, true)
         XCTAssertEqual(v["location"]?.asString, "http://google.com/flatbuffers/")
         XCTAssertEqual(v["list"]?.asVector?.count, 3)
+        XCTAssertEqual(v["list"]?[1]?["sibling"]?["parent"]?["prefix"]?.asInt, 65)
     }
 }

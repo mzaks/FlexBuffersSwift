@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0B0415CD1E2A721100B376C7 /* FlexBufferRoundtripTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0415CC1E2A721100B376C7 /* FlexBufferRoundtripTest.swift */; };
 		0B2092381E9194FA00EF3AF5 /* flatBuffersBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */; };
+		0B20923C1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */; };
 		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
 		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
 		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
@@ -43,6 +44,7 @@
 /* Begin PBXFileReference section */
 		0B0415CC1E2A721100B376C7 /* FlexBufferRoundtripTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferRoundtripTest.swift; sourceTree = "<group>"; };
 		0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = flatBuffersBench.swift; sourceTree = "<group>"; };
+		0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsonToFlexConverterTest.swift; sourceTree = "<group>"; };
 		0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferDecodeTest.swift; sourceTree = "<group>"; };
 		0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FlexBuffersPerformanceTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B6554FE1E1A9BF700782925 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 				0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */,
 				0B0415CC1E2A721100B376C7 /* FlexBufferRoundtripTest.swift */,
 				0BB1BE751E1271E900A9041B /* Info.plist */,
+				0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */,
 			);
 			path = FlexBuffersTests;
 			sourceTree = "<group>";
@@ -285,6 +288,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B20923C1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift in Sources */,
 				0B0415CD1E2A721100B376C7 /* FlexBufferRoundtripTest.swift in Sources */,
 				0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */,
 				0BB1BE741E1271E900A9041B /* FlexBuffersEncodeTests.swift in Sources */,

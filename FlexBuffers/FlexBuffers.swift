@@ -338,6 +338,20 @@ public class FlexBuffer {
         stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
     }
     
+    fileprivate func string(_ start : UnsafeMutablePointer<UInt8>, _ count : Int) {
+        var sloc = offset
+        
+        let bitWidth = BitWidth.width(uint: UInt64(count))
+        let byteWidth = align(width: bitWidth)
+        write(value: count, size: byteWidth)
+        sloc = offset
+        for i in 0..<count {
+            write(value: start.advanced(by: i).pointee, size: 1)
+        }
+        write(value: UInt8(0), size: 1)
+        stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
+    }
+    
     fileprivate func key(_ s : String) {
         let sloc : Int
         if options.contains(.shareKeys), let index = keyPool[s] {
@@ -381,8 +395,34 @@ public class FlexBuffer {
                 keyPool[sd] = sloc
             }
         }
-        
-        
+        stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
+    }
+    
+    fileprivate func key(_ start : UnsafeMutablePointer<UInt8>, _ count : Int) {
+        let sloc : Int
+        if options.contains(.shareKeys) == false {
+            sloc = offset
+            for i in 0..<count {
+                write(value: start.advanced(by: i).pointee, size: 1)
+            }
+            write(value: UInt8(0), size: 1)
+        } else {
+            let sd = String.init(bytesNoCopy: start, length: count, encoding: String.Encoding.utf8, freeWhenDone: false)
+            
+            if let sd = sd, let index = keyPool[sd] {
+                sloc = index
+            } else {
+                sloc = offset
+                
+                for i in 0..<count {
+                    write(value: start.advanced(by: i).pointee, size: 1)
+                }
+                write(value: UInt8(0), size: 1)
+                if let sd = sd {
+                    keyPool[sd] = sloc
+                }
+            }
+        }
         stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
     }
     
@@ -400,7 +440,7 @@ public class FlexBuffer {
         let bitWidth = BitWidth.width(double: val)
         let byteWitdth = align(width: bitWidth)
         let iloc = offset
-        write(value: val, size: byteWitdth)
+        writeDouble(value: val, size: byteWitdth)
         stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
     }
     
@@ -648,12 +688,10 @@ public class FlexBuffer {
     }
     
     public func finish() -> Data {
-        assert(stack.count == 1, "you likely have objects that were never included in a parent. You need to have exactly one root to finish a buffer. Check your Start/End calls are matched, and all objects are inside some other object.")
         
-        let byteWidth = align(width: stack[0].elementWidth(size: offset, index: 0))
-        write(flxvalue: stack[0], width: byteWidth)
-        write(value: stack[0].storedPackedType(), size: 1)
-        write(value: byteWidth, size: 1)
+        if !finished {
+            finishBuffer()
+        }
         
         let data = Data(bytes:buffer, count: offset)
         offset = 0
@@ -662,6 +700,16 @@ public class FlexBuffer {
         }
         
         return data
+    }
+    
+    private func finishBuffer(){
+        assert(stack.count == 1, "you likely have objects that were never included in a parent. You need to have exactly one root to finish a buffer. Check your Start/End calls are matched, and all objects are inside some other object.")
+        
+        let byteWidth = align(width: stack[0].elementWidth(size: offset, index: 0))
+        write(flxvalue: stack[0], width: byteWidth)
+        write(value: stack[0].storedPackedType(), size: 1)
+        write(value: byteWidth, size: 1)
+        finished = true
     }
 }
 
@@ -729,6 +777,14 @@ extension FlexBuffer {
 
 public extension FlexBuffer {
     public func addNull(){
+        null()
+    }
+    public func addNull(keyString : String){
+        self.key(keyString)
+        null()
+    }
+    public func addNull(key : StaticString){
+        self.key(key)
         null()
     }
     public func add(value v : Bool){
@@ -1092,7 +1148,7 @@ fileprivate func _indirect(pointer : UnsafeRawPointer, width : UInt8) -> UnsafeR
     return pointer - Int(step)
 }
 
-
+// MARK: ACCESSORS
 public struct FlxbReference : CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let parentWidth : UInt8
@@ -1115,6 +1171,27 @@ public struct FlxbReference : CustomDebugStringConvertible {
         self.parentWidth = parentWidth
         self.byteWidth = byteWidth
         self.type = type
+    }
+    
+    public subscript(index: Int) -> FlxbReference? {
+        guard let vector = self.asVector else {
+            return nil
+        }
+        return vector[index]
+    }
+    
+    public subscript(key: StaticString) -> FlxbReference? {
+        guard let map = self.asMap else {
+            return nil
+        }
+        return map[key]
+    }
+    
+    public func get(key: String) -> FlxbReference? {
+        guard let map = self.asMap else {
+            return nil
+        }
+        return map.get(key: key)
     }
     
     public var asInt : Int? {
@@ -1287,13 +1364,13 @@ public struct FlxbReference : CustomDebugStringConvertible {
     }
     
     public var debugDescription: String {
+        if let v = asBool {
+            return "\(v ? "true" : "false")"
+        }
         if let v = asInt {
             return "\(v)"
         }
         if let v = asUInt {
-            return "\(v)"
-        }
-        if let v = asBool {
             return "\(v)"
         }
         if let v = asFloat {
@@ -1311,7 +1388,7 @@ public struct FlxbReference : CustomDebugStringConvertible {
         if let v = asVector {
             return v.debugDescription
         }
-        return "---Unexpected Type---"
+        return "null"
     }
 }
 
@@ -1562,11 +1639,9 @@ public struct FlxbMap : Sequence, CustomDebugStringConvertible {
     }
 }
 
-public protocol FlexBufferDecoder {
-    static func decode(data : Data) -> FlxbReference?
-}
+// MARK: DECODER
 
-extension FlexBuffer : FlexBufferDecoder {
+extension FlexBuffer {
     public static func decode(data: Data) -> FlxbReference? {
         guard data.count > 2 else {
             return nil
@@ -1580,5 +1655,249 @@ extension FlexBuffer : FlexBufferDecoder {
         }
         let p = pointer.advanced(by: (data.count - Int(byteWidth) - 2))
         return FlxbReference(dataPointer: UnsafeRawPointer(p), parentWidth: byteWidth, packedType: packedType)
+    }
+}
+
+// MARK: JSON Parser
+extension FlexBuffer {
+    public static func dataFrom(jsonData data : Data, initialSize : Int = 2048, options : BuilderOptions = []) -> Data {
+        var stack = [Int]()
+        var tokenPointerCapacity = 32
+        var tokenPointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
+        var tokenPointerCurrent = 0
+
+        func addToToken(value : UInt8, tokenPointerCurrent: Int, tokenPointerStart: inout UnsafeMutablePointer<UInt8>) -> Int {
+            tokenPointerStart.advanced(by: tokenPointerCurrent).initialize(to: value)
+            
+            let newTokenPointerCount = tokenPointerCurrent + 1
+            if tokenPointerCapacity <= newTokenPointerCount {
+                tokenPointerCapacity = tokenPointerCapacity << 1
+                let prevBuffer = tokenPointerStart
+                tokenPointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
+                tokenPointerStart.initialize(from: prevBuffer, count: newTokenPointerCount)
+                prevBuffer.deallocate(capacity: newTokenPointerCount)
+            }
+            return newTokenPointerCount
+        }
+        
+        var tokenNamePointerCapacity = 32
+        var tokenNamePointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
+        var tokenNamePointerCurrent = 0
+
+        var keyIsPresent = false
+        var quoteMode = false
+        var tokenIsQuoted = false
+        let flx = FlexBuffer(initialSize : initialSize, options : options)
+        
+        func addNumber(_ tokenPointerStart: UnsafeMutablePointer<UInt8>, _ tokenPointerCurrent: Int) -> Bool {
+            
+            var negative = false
+            var expo = false
+            var expoNegative = false
+            var integer = true
+            var intNumber = 0
+            var floatNumber = 0
+            var expNumber = 0
+            var divider = 1
+            for i in 0..<tokenPointerCurrent {
+                let n1 = tokenPointerStart.advanced(by: i).pointee
+                switch n1 {
+                case 48...57:
+                    let n = Int(tokenPointerStart.advanced(by: i).pointee) - 48
+                    if expo {
+                        expNumber = expNumber * 10 + n
+                    } else if integer {
+                        intNumber = intNumber * 10 + n
+                    } else {
+                        floatNumber = floatNumber * 10 + n
+                        divider *= 10
+                    }
+                case 45: // -
+                    if i == 0 {
+                        negative = true
+                    } else {
+                        if expo && !expoNegative {
+                            expoNegative = true
+                        } else {
+                            return false
+                        }
+                    }
+                case 43: // +
+                    guard i > 0 else {
+                        return false
+                    }
+                    let prev = tokenPointerStart.advanced(by: i-1).pointee
+                    guard prev == 101 || prev == 69 else {
+                        return false
+                    }
+                case 46: // .
+                    if i > 0 && integer {
+                        integer = false
+                    } else {
+                        return false
+                    }
+                case 101, 69: // e, E
+                    if !expo {
+                        expo = true
+                    } else {
+                        return false
+                    }
+                default:
+                    return false
+                }
+            }
+            var mult = negative ? -1.0 : 1.0
+            if expo {
+                mult = mult * pow(Double(10),Double(expoNegative ? -expNumber : expNumber))
+            }
+            if integer && !expoNegative {
+                let n = intNumber * Int(mult)
+                if n > Int(INT16_MAX) || n < Int(INT16_MIN) {
+                    flx.pushIndirect(n)
+                } else {
+                    flx.int(n)
+                }
+            } else {
+                let d = (Double(intNumber) + (Double(floatNumber) / Double(divider))) * Double(mult)
+                flx.pushIndirect(d)
+            }
+            return true
+        }
+        
+        func addValue(_ tokenPointerStart: UnsafeMutablePointer<UInt8>, _ tokenPointerCurrent: Int, _ tokenNamePointerStart : UnsafeMutablePointer<UInt8>, tokenNamePointerCurrent : Int){
+            
+            if keyIsPresent {
+                flx.key(tokenNamePointerStart, tokenNamePointerCurrent)
+            }
+            
+            if tokenPointerCurrent == 4 && tokenPointerStart.pointee == 110 && tokenPointerStart.advanced(by: 1).pointee == 117 && tokenPointerStart.advanced(by: 2).pointee == 108 && tokenPointerStart.advanced(by: 3).pointee == 108 {
+                flx.addNull()
+                return
+            }
+            
+            if tokenPointerCurrent == 4 && tokenPointerStart.pointee == 116 && tokenPointerStart.advanced(by: 1).pointee == 114 && tokenPointerStart.advanced(by: 2).pointee == 117 && tokenPointerStart.advanced(by: 3).pointee == 101 {
+                flx.bool(true)
+                return
+            }
+            
+            if tokenPointerCurrent == 5 && tokenPointerStart.pointee == 102 && tokenPointerStart.advanced(by: 1).pointee == 97 && tokenPointerStart.advanced(by: 2).pointee == 108 && tokenPointerStart.advanced(by: 3).pointee == 115 && tokenPointerStart.advanced(by: 4).pointee == 101 {
+                flx.bool(false)
+                return
+            }
+            
+            if tokenIsQuoted == false && addNumber(tokenPointerStart, tokenPointerCurrent) {
+                return
+            }
+            
+            flx.string(tokenPointerStart, tokenPointerCurrent)
+            
+        }
+        
+        data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
+            var i : Int = 0
+            while i<data.count {
+                let c = bytes.advanced(by: i)
+                switch c.pointee {
+                case 123: //{
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        if keyIsPresent {
+                            flx.key(tokenNamePointerStart, tokenNamePointerCurrent)
+                        }
+                        keyIsPresent = false
+                        stack.append(flx.startMap())
+                        tokenNamePointerCurrent = 0
+                        tokenPointerCurrent = 0
+                    }
+                case 91: //[
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        if keyIsPresent {
+                            flx.key(tokenNamePointerStart, tokenNamePointerCurrent)
+                        }
+                        keyIsPresent = false
+                        stack.append(flx.startVector())
+                        tokenNamePointerCurrent = 0
+                        tokenPointerCurrent = 0
+                    }
+                case 125: //}
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        if tokenPointerCurrent > 0 {
+                            addValue(tokenPointerStart, tokenPointerCurrent, tokenNamePointerStart, tokenNamePointerCurrent: tokenNamePointerCurrent)
+                            tokenIsQuoted = false
+                        }
+                        flx.endMap(start: stack.removeLast())
+                        tokenNamePointerCurrent = 0
+                        tokenPointerCurrent = 0
+                        keyIsPresent = false
+                    }
+                case 93: //]
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        
+                        if tokenPointerCurrent > 0 {
+                            addValue(tokenPointerStart, tokenPointerCurrent, tokenNamePointerStart, tokenNamePointerCurrent: tokenNamePointerCurrent)
+                            tokenIsQuoted = false
+                        }
+                        _ = flx.endVector(start: stack.removeLast(), typed: false, fixed: false)
+                        tokenNamePointerCurrent = 0
+                        tokenPointerCurrent = 0
+                        keyIsPresent = false
+                    }
+                case 58: //:
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        if stack.count == 0 {
+                            return
+                        }
+                        if tokenNamePointerCapacity < tokenPointerCurrent {
+                            tokenNamePointerStart.deallocate(capacity: tokenNamePointerCapacity)
+                            tokenNamePointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCurrent)
+                            tokenNamePointerCapacity = tokenPointerCurrent
+                        }
+                        tokenNamePointerStart.moveAssign(from: tokenPointerStart, count: tokenPointerCurrent)
+                        tokenNamePointerCurrent = tokenPointerCurrent
+                        tokenPointerCurrent = 0
+                        keyIsPresent = true
+                        tokenIsQuoted = false
+                    }
+                case 34://"
+                    if quoteMode && c.predecessor().pointee == 92 { // \"
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        quoteMode = quoteMode != true
+                        tokenIsQuoted = tokenIsQuoted || quoteMode
+                    }
+                case 44://,
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    } else {
+                        if tokenPointerCurrent > 0 {
+                            addValue(tokenPointerStart, tokenPointerCurrent, tokenNamePointerStart, tokenNamePointerCurrent: tokenNamePointerCurrent)
+                        }
+                        tokenIsQuoted = false
+                        tokenNamePointerCurrent = 0
+                        tokenPointerCurrent = 0
+                        keyIsPresent = false
+                    }
+                case 10, 13: // \n, \r
+                    break
+                case 9, 32: // \t space
+                    if quoteMode {
+                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                    }
+                default:
+                    tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                }
+                i += 1
+            }
+        }
+        return flx.finish()
     }
 }

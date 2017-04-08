@@ -182,6 +182,12 @@ func createJsonData() -> Data {
     return try!JSONSerialization.data(withJSONObject: object2, options: [])
 }
 
+let jsonStringData = "{\"fruit\" : 2, \"initialized\" : true, \"list\" : [{\"name\" : \"Hello, World!\", \"postfix\" : 33, \"rating\" : 3.14154, \"sibling\" : {\"parent\" : {\"count\" : 10000, \"id\" : 2880293630, \"length\" : 1000000, \"prefix\" : 64}, \"ratio\" : 3.14159, \"size\" : 10000, \"time\" : 123456}}, {\"name\" : \"Hello, World!\", \"postfix\" : 34, \"rating\" : 4.14154, \"sibling\" : {\"parent\" : {\"count\" : 10001, \"id\" : 2880293631, \"length\" : 1000001, \"prefix\" : 65}, \"ratio\" : 4.14159, \"size\" : 10001, \"time\" : 123457}}, {\"name\" : \"Hello, World!\", \"postfix\" : 35, \"rating\" : 5.14154, \"sibling\" : {\"parent\" : {\"count\" : 10002, \"id\" : 2880293632, \"length\" : 1000002, \"prefix\" : 66}, \"ratio\" : 5.14159, \"size\" : 10002, \"time\" : 123458}}], \"location\" : \"http://google.com/flatbuffers/\"}".data(using: .utf8)
+
+func createFlexBufferFromJsonString() -> Data {
+    return FlexBuffer.dataFrom(jsonData: jsonStringData!, initialSize: 800, options: [])
+}
+
 func createFlatBufferContainer() -> Data {
     let veclen = 3
     var foobars = [FooBar](repeating: FooBar(), count: veclen)
@@ -281,6 +287,34 @@ private func use1(_ data : Data, start : Int) -> Int
     return sum
 }
 
+private func use2(_ data : Data, start : Int) -> Int
+{
+    var sum:Int = Int(start)
+    let root = FlexBuffer.decode(data: data)!
+    
+    sum = sum &+ root["location"]!.asString!.utf8.count
+    sum = sum &+ root["fruit"]!.asInt!
+    sum = sum &+ (root["initialized"]!.asBool! ? 1 : 0)
+    
+    let list = root["list"]!.asVector!
+    for i in 0..<list.count {
+        sum = sum &+ root["list"]![i]!["name"]!.asString!.utf8.count
+        sum = sum &+ Int(root["list"]![i]!["postfix"]!.asUInt!)
+        sum = sum &+ Int(root["list"]![i]!["rating"]!.asDouble!)
+        
+        sum = sum &+ Int(root["list"]![i]!["sibling"]!["ratio"]!.asFloat!)
+        sum = sum &+ Int(root["list"]![i]!["sibling"]!["size"]!.asUInt!)
+        sum = sum &+ root["list"]![i]!["sibling"]!["time"]!.asInt!
+        
+        sum = sum &+ root["list"]![i]!["sibling"]!["parent"]!["count"]!.asInt!
+        sum = sum &+ Int(root["list"]![i]!["sibling"]!["parent"]!["id"]!.asUInt!)
+        sum = sum &+ Int(root["list"]![i]!["sibling"]!["parent"]!["length"]!.asUInt!)
+        sum = sum &+ root["list"]![i]!["sibling"]!["parent"]!["prefix"]!.asInt!
+    }
+    return sum
+}
+
+
 private func useJSON(_ data : Data, start : Int) -> Int
 {
     
@@ -357,8 +391,9 @@ for i in 0 ..< NumberOfEncodings {
 }
 let data = datas[0]!
 d = CFAbsoluteTimeGetCurrent() - t
-print("Efficient encoding (x\(NumberOfEncodings)):")
+print("Efficient FlexBuffers encoding (x\(NumberOfEncodings)):")
 print("\(data) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 var datas1 = [Data!](repeating: nil, count: NumberOfEncodings)
@@ -368,8 +403,9 @@ for i in 0 ..< NumberOfEncodings {
 }
 let data1 = datas1[0]!
 d = CFAbsoluteTimeGetCurrent() - t
-print("Inefficient encoding (x\(NumberOfEncodings)):")
+print("Inefficient FlexBuffers encoding (x\(NumberOfEncodings)):")
 print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 
@@ -383,6 +419,7 @@ let data2 = datas2[0]!
 d = CFAbsoluteTimeGetCurrent() - t
 print("JSON encoding (x\(NumberOfEncodings)):")
 print("\(data2) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 var datas3 = [Data!](repeating: nil, count: NumberOfEncodings)
@@ -394,6 +431,7 @@ let data3 = datas3[0]!
 d = CFAbsoluteTimeGetCurrent() - t
 print("FlatBuffers encoding (x\(NumberOfEncodings)):")
 print("\(data3) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 var datas4 = [Data!](repeating: nil, count: NumberOfEncodings)
@@ -405,6 +443,19 @@ let data4 = datas4[0]!
 d = CFAbsoluteTimeGetCurrent() - t
 print("FlatBuffers encoding without data duplication (x\(NumberOfEncodings)):")
 print("\(data4) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+var datas5 = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
+for i in 0 ..< NumberOfEncodings {
+    datas5[i] = createFlexBufferFromJsonString()
+}
+let data5 = datas5[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("FlexBuffers encoding from JSON string (x\(NumberOfEncodings)):")
+print("\(data5) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-------------")
 m = getMegabytesUsed()!
 
 t = CFAbsoluteTimeGetCurrent()
@@ -413,8 +464,20 @@ for i in 0 ..< NumberOfDecodings {
     sum += use(data, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
-print("Decoding (x\(NumberOfDecodings)) result of efficient encoding:")
+print("Decoding (x\(NumberOfDecodings)) result of efficient FlexBuffers encoding:")
 print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+sum = 0
+for i in 0 ..< NumberOfDecodings {
+    sum += use2(data, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) result of efficient FlexBuffers encoding and using access chaining:")
+print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 
@@ -424,8 +487,9 @@ for i in 0 ..< NumberOfDecodings {
     sum1 += use1(data1, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
-print("Decoding (x\(NumberOfDecodings)) result of inefficient encoding:")
+print("Decoding (x\(NumberOfDecodings)) result of inefficient FlexBuffers encoding:")
 print("\(sum1) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 t = CFAbsoluteTimeGetCurrent()
@@ -436,6 +500,7 @@ for i in 0 ..< NumberOfDecodings {
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding (x\(NumberOfDecodings)) JSON:")
 print("\(sum2) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
 m = getMegabytesUsed()!
 
 t = CFAbsoluteTimeGetCurrent()
@@ -447,3 +512,16 @@ for i in 0 ..< NumberOfDecodings {
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding (x\(NumberOfDecodings)) FlatBuffers:")
 print("\(sum3) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+sum = 0
+for i in 0 ..< NumberOfDecodings {
+    sum += use1(data5, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding FlexBuffers created from JSON string (x\(NumberOfDecodings)):")
+print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
