@@ -143,4 +143,12 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(12, day)
     }
     
+    func testGiphyTrending(){
+        let url = Bundle.init(for: JsonToFlexConverterTest.self).url(forResource: "giphy_trending", withExtension: "json")!
+        let jsonData = try!Data(contentsOf: url)
+        let data = FlexBuffer.dataFrom(jsonData: jsonData)
+        let o = FlexBuffer.decode(data: data)
+        print(o!["data"]![1]!["url"]!.debugDescription)
+        print(o!["data"]!.count)
+    }
 }

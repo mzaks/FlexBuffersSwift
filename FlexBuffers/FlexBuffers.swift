@@ -1307,7 +1307,12 @@ public struct FlxbReference : CustomDebugStringConvertible {
             return nil
         case .vector :
             if let p = self.indirect {
-                return FlxbVector(dataPointer: p, byteWidth: byteWidth, type: type.typedVectorElementType).count
+                if type.isTypedVector {
+                    return FlxbVector(dataPointer: p, byteWidth: byteWidth, type: type.typedVectorElementType).count
+                } else {
+                    return FlxbVector(dataPointer: p, byteWidth: byteWidth).count
+                }
+                
             }
             return nil
         case .map :
