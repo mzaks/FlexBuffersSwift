@@ -49,7 +49,7 @@ FlexBuffersSwift also incorporates it's own efficient JSON parser which is used 
 let data = FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
 ```
 
-The binary can than be read with no parsing costs ina strong typed way:
+The binary can than be read with no parsing costs in a strong typed way:
 
 ```
 let accessor = FlexBuffer.decode(data:data)
