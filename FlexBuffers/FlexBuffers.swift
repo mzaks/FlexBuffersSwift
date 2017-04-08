@@ -1690,7 +1690,10 @@ extension FlexBuffer {
         let flx = FlexBuffer(initialSize : initialSize, options : options)
         
         func addNumber(_ tokenPointerStart: UnsafeMutablePointer<UInt8>, _ tokenPointerCurrent: Int) -> Bool {
-            
+            // if a number starts with `0` next character has to be `.` becasaue of JSON specification
+            if tokenPointerCurrent >= 2 && tokenPointerStart.advanced(by: 0).pointee == 48 && tokenPointerStart.advanced(by: 1).pointee != 46 {
+                return false
+            }
             var negative = false
             var expo = false
             var expoNegative = false

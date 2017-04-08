@@ -114,6 +114,13 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(0.76543, o![5]?.asFloat)
     }
     
+    func testJSONArrayOfFloatsWhereOneNumberIsNotValid() {
+        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 025]".data(using: .utf8)!)
+        let o = FlexBuffer.decode(data: data)
+        XCTAssertEqual(0.1, o![0]?.asFloat!)
+        XCTAssertEqual("025", o![1]?.asString!)
+    }
+    
     func testJSONArrayOfFloatsAndFalse() {
         let data = FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, false, 0.55555, -0.76543]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
@@ -124,6 +131,16 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(false, o![3]!.asBool)
         XCTAssertEqual(0.55555, o![4]?.asFloat)
         XCTAssertEqual(-0.76543, o![5]?.asFloat)
+    }
+    
+    func testJSONSample(){
+        let data = FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
+        let accessor = FlexBuffer.decode(data:data)
+        let name = accessor?["name"]?.asString
+        let day = accessor?["birthday"]?["day"]?.asInt
+        
+        XCTAssertEqual("Maxim", name)
+        XCTAssertEqual(12, day)
     }
     
 }
