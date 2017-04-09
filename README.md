@@ -4,7 +4,7 @@ FlexBuffers is a self suficient binary data representation which can encode numb
 
 # Usage
 ```swift
-// {vec:[-100,"Fred",4.0],bar:[1,2,3],bar3:[1,2,3]foo:100,mymap{foo:"Fred"}}
+// {vec:[-100,"Fred",4.0], bar:[1,2,3], bar3:[1,2,3], foo:100, mymap:{foo:"Fred"}}
 let flx = FlexBuffer()
 flx.addMap {
     flx.addVector(key: "vec") {
