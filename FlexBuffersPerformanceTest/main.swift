@@ -376,6 +376,37 @@ private func use3(_ reader : FlatBuffersMemoryReader, start : Int) -> Int
     return sum
 }
 
+private func use4(_ data : Data, start : Int) -> Int
+{
+    let flxData = FlexBuffer.dataFrom(jsonData: data)
+    var sum:Int = Int(start)
+    let root = FlexBuffer.decode(data: flxData)!.asMap!
+    sum = sum &+ root["location"]!.asString!.utf8.count
+    sum = sum &+ root["fruit"]!.asInt!
+    sum = sum &+ (root["initialized"]!.asBool! ? 1 : 0)
+    
+    let list = root["list"]!.asVector!
+    for i in 0..<list.count {
+        let foobar = list[i]!.asMap!
+        sum = sum &+ foobar["name"]!.asString!.utf8.count
+        sum = sum &+ Int(foobar["postfix"]!.asInt!)
+        sum = sum &+ Int(foobar["rating"]!.asDouble!)
+        
+        let bar = foobar["sibling"]!.asMap!
+        
+        sum = sum &+ Int(bar["ratio"]!.asFloat!)
+        sum = sum &+ Int(bar["size"]!.asInt!)
+        sum = sum &+ bar["time"]!.asInt!
+        
+        let foo = bar["parent"]!.asMap!
+        sum = sum &+ foo["count"]!.asInt!
+        sum = sum &+ Int(foo["id"]!.asInt!)
+        sum = sum &+ Int(foo["length"]!.asInt!)
+        sum = sum &+ foo["prefix"]!.asInt!
+    }
+    return sum
+}
+
 let NumberOfDecodings = 100_000
 let NumberOfEncodings = 100_000
 
@@ -522,6 +553,17 @@ for i in 0 ..< NumberOfDecodings {
 }
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding FlexBuffers created from JSON string (x\(NumberOfDecodings)):")
+print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+sum = 0
+for i in 0 ..< NumberOfDecodings {
+    sum += use4(jsonStringData!, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding JSON by encoding it to FlexBuffers and than using it (x\(NumberOfDecodings)):")
 print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!

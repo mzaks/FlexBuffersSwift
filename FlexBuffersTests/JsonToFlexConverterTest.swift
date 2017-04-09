@@ -148,7 +148,8 @@ class JsonToFlexConverterTest: XCTestCase {
         let jsonData = try!Data(contentsOf: url)
         let data = FlexBuffer.dataFrom(jsonData: jsonData)
         let o = FlexBuffer.decode(data: data)
-        print(o!["data"]![1]!["url"]!.debugDescription)
-        print(o!["data"]!.count)
+        XCTAssertEqual("http:\\/\\/giphy.com\\/gifs\\/nirvana-bored-kurt-cobain-qc1waqAag4tZC", o!["data"]![1]!["url"]!.asString!)
+        XCTAssertEqual(25, o!["data"]!.count)
+        XCTAssertEqual("http:\\/\\/media3.giphy.com\\/media\\/qc1waqAag4tZC\\/giphy.gif", o!["data"]![1]!["images"]!["original"]!["url"]!.asString!)
     }
 }
