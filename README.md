@@ -107,3 +107,5 @@ Decoding JSON by encoding it to FlexBuffers and than using it (x100000):
 864436166550000 in 2.35735005140305 267.043 MB
 -
 ```
+![](docs/benchmark1.png)
+![](docs/benchmark2.png)
