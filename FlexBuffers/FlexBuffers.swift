@@ -88,6 +88,8 @@ fileprivate enum Type : UInt8 {
     }
 }
 
+private let widths = [UInt8(1), UInt8(2), UInt8(4), UInt8(8)]
+
 private func packedType(width : BitWidth, type : Type) -> UInt8 {
     return width.rawValue | (type.rawValue << 2)
 }
@@ -256,13 +258,11 @@ public class FlexBuffer {
             return packedType(width: storedWidth(bitWidth: width), type: type)
         }
         
-        static let widths = [UInt8(1), UInt8(2), UInt8(4), UInt8(8)]
-        
         func elementWidth(size : Int, index : Int) -> BitWidth {
             if type.isInline {
                 return minBitWidth
             } else {
-                for width in Value.widths {
+                for width in widths {
                     let offset_loc = size + paddingSize(bufSize: size, scalarSize: width) + index * Int(width)
                     let offset = offset_loc - Int(value.asInt)
                     let bit_width = BitWidth.width(int: Int64(offset))
@@ -1194,6 +1194,10 @@ public struct FlxbReference : CustomDebugStringConvertible {
         return map.get(key: key)
     }
     
+    public var isNull : Bool {
+        return type == .null
+    }
+    
     public var asInt : Int? {
         guard let r = asInt64 else {
             return nil
@@ -1806,6 +1810,12 @@ extension FlexBuffer {
             while i<data.count {
                 let c = bytes.advanced(by: i)
                 switch c.pointee {
+                case 92: // \
+                    if quoteMode && c.advanced(by: 1).pointee == 47 { // handling \/ case
+                        break
+                    }else{
+                        fallthrough
+                    }
                 case 123: //{
                     if quoteMode {
                         tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)

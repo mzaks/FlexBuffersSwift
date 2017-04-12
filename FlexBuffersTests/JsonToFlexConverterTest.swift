@@ -89,8 +89,7 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(0.1, o![0]?.asFloat!)
         XCTAssertEqual(0.25, o![1]?.asFloat!)
         XCTAssertEqual(0.75, o![2]?.asFloat!)
-        XCTAssertEqual(nil, o![3]!.asFloat)
-        XCTAssertEqual(nil, o![3]!.asString)
+        XCTAssertEqual(true, o![3]!.isNull)
         XCTAssertEqual(0.55555, o![4]?.asFloat!)
         XCTAssertEqual(0.76543, o![5]?.asFloat!)
     }
@@ -146,10 +145,28 @@ class JsonToFlexConverterTest: XCTestCase {
     func testGiphyTrending(){
         let url = Bundle.init(for: JsonToFlexConverterTest.self).url(forResource: "giphy_trending", withExtension: "json")!
         let jsonData = try!Data(contentsOf: url)
+        
+        var t = CFAbsoluteTimeGetCurrent()
         let data = FlexBuffer.dataFrom(jsonData: jsonData)
         let o = FlexBuffer.decode(data: data)
-        XCTAssertEqual("http:\\/\\/giphy.com\\/gifs\\/nirvana-bored-kurt-cobain-qc1waqAag4tZC", o!["data"]![1]!["url"]!.asString!)
-        XCTAssertEqual(25, o!["data"]!.count)
-        XCTAssertEqual("http:\\/\\/media3.giphy.com\\/media\\/qc1waqAag4tZC\\/giphy.gif", o!["data"]![1]!["images"]!["original"]!["url"]!.asString!)
+        let u = o!["data"]![1]!["url"]!.asString!
+        let c = o!["data"]!.count
+        let o_u = o!["data"]![1]!["images"]!["original"]!["url"]!.asString!
+        print("<<<<<<<<<<<\(CFAbsoluteTimeGetCurrent() - t)")
+        XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u)
+        let u_u = URL(string: u)
+        print(u_u)
+        XCTAssertEqual(25, c)
+        XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u)
+        
+        t = CFAbsoluteTimeGetCurrent()
+        let o1 = try!JSONSerialization.jsonObject(with: jsonData, options: []) as! NSDictionary
+        let u1 = ((o1["data"] as! NSArray)[1] as! NSDictionary)["url"] as! String
+        let c1 = (o1["data"] as! NSArray).count
+        let o_u1 = ((((o1["data"] as! NSArray)[1] as! NSDictionary)["images"] as! NSDictionary)["original"] as! NSDictionary)["url"] as! String
+        print(">>>>>>>>>>>>>>>>>>>>\(CFAbsoluteTimeGetCurrent() - t)")
+        XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u1)
+        XCTAssertEqual(25, c1)
+        XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u1)
     }
 }

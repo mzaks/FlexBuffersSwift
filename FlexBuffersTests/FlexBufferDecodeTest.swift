@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import FlexBuffers
+import FlexBuffers
 
 class FlexBufferDecodeTest: XCTestCase {
 

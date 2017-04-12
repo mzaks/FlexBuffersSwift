@@ -184,6 +184,9 @@ func createJsonData() -> Data {
 
 let jsonStringData = "{\"fruit\" : 2, \"initialized\" : true, \"list\" : [{\"name\" : \"Hello, World!\", \"postfix\" : 33, \"rating\" : 3.14154, \"sibling\" : {\"parent\" : {\"count\" : 10000, \"id\" : 2880293630, \"length\" : 1000000, \"prefix\" : 64}, \"ratio\" : 3.14159, \"size\" : 10000, \"time\" : 123456}}, {\"name\" : \"Hello, World!\", \"postfix\" : 34, \"rating\" : 4.14154, \"sibling\" : {\"parent\" : {\"count\" : 10001, \"id\" : 2880293631, \"length\" : 1000001, \"prefix\" : 65}, \"ratio\" : 4.14159, \"size\" : 10001, \"time\" : 123457}}, {\"name\" : \"Hello, World!\", \"postfix\" : 35, \"rating\" : 5.14154, \"sibling\" : {\"parent\" : {\"count\" : 10002, \"id\" : 2880293632, \"length\" : 1000002, \"prefix\" : 66}, \"ratio\" : 5.14159, \"size\" : 10002, \"time\" : 123458}}], \"location\" : \"http://google.com/flatbuffers/\"}".data(using: .utf8)
 
+let jsonStringUnsortedData = "{\"list\":[{\"name\":\"Hello, World!\",\"postfix\":33,\"rating\":3.141543243244554,\"sibling\":{\"size\":10000,\"ratio\":3.14159,\"time\":123456,\"parent\":{\"prefix\":64,\"length\":1000000,\"id\":2880293630,\"count\":10000}}},{\"name\":\"Hello, World!\",\"postfix\":34,\"rating\":4.141543243244554,\"sibling\":{\"size\":10001,\"ratio\":4.14159,\"time\":123457,\"parent\":{\"prefix\":65,\"length\":1000001,\"id\":2880293631,\"count\":10001}}},{\"name\":\"Hello, World!\",\"postfix\":35,\"rating\":5.141543243244554,\"sibling\":{\"size\":10002,\"ratio\":5.14159,\"time\":123458,\"parent\":{\"prefix\":66,\"length\":1000002,\"id\":2880293632,\"count\":10002}}}],\"initialized\":true,\"location\":\"http:\\/\\/google.com\\/flatbuffers\\/\",\"fruit\":2}".data(using: .utf8)
+
+
 func createFlexBufferFromJsonString() -> Data {
     return FlexBuffer.dataFrom(jsonData: jsonStringData!, initialSize: 800, options: [])
 }
@@ -407,6 +410,9 @@ private func use4(_ data : Data, start : Int) -> Int
     return sum
 }
 
+
+
+
 let NumberOfDecodings = 100_000
 let NumberOfEncodings = 100_000
 
@@ -564,6 +570,17 @@ for i in 0 ..< NumberOfDecodings {
 }
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding JSON by encoding it to FlexBuffers and than using it (x\(NumberOfDecodings)):")
+print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+sum = 0
+for i in 0 ..< NumberOfDecodings {
+    sum += use4(jsonStringUnsortedData!, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding unsorted JSON by encoding it to FlexBuffers and than using it (x\(NumberOfDecodings)):")
 print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
