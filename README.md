@@ -110,5 +110,5 @@ Decoding unsorted JSON by encoding it to FlexBuffers and than using it (x100000)
 864436166550000 in 2.36321097612381 203.129 MB
 -
 ```
-![](docs/benchmark1.png)
-![](docs/benchmark2.png)
+![](docs/benchmark01.png)
+![](docs/benchmark02.png)
