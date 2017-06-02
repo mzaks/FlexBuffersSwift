@@ -218,13 +218,13 @@ class FlexBufferBuilderTests: XCTestCase {
     
     func testAddVectorWithVectorAndOneInt() {
         let flx = FlexBuffer()
-        flx.addVector {
-            flx.addVector {
+        try!flx.addVector {
+            try!flx.addVector {
                 flx.add(value:61)
             }
             flx.add(value:64)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         
         // then
         expect(encodedData: encodedData, [1, 61, 4, 2, 3, 64, 40, 4, 4, 40, 1])
@@ -237,13 +237,13 @@ class FlexBufferBuilderTests: XCTestCase {
     func testAddVectorWithOneIntAndNulls() {
         // when
         let flx = FlexBuffer()
-        flx.addVector {
+        try!flx.addVector {
             flx.addNull()
             flx.addNull()
             flx.add(value:64)
             flx.addNull()
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
 
         expect(encodedData: encodedData, [4, 0, 0, 64, 0, 0, 0, 4, 0, 8, 40, 1])
     }
@@ -272,40 +272,40 @@ class FlexBufferBuilderTests: XCTestCase {
     
     func testAddMap() {
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(keyString: "a", value: 12)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         expect(encodedData: encodedData, [97, 0, 1, 3, 1, 1, 1, 12, 4, 2, 36, 1])
     }
     
     func testAddMapKeyAsStaticString() {
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(key: "a", value: 12)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         expect(encodedData: encodedData, [97, 0, 1, 3, 1, 1, 1, 12, 4, 2, 36, 1])
     }
     
     func testAddMapSortKeys() {
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(keyString: "", value: 45)
             flx.add(keyString: "a", value: 12)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         
         expect(encodedData: encodedData, [0, 97, 0, 2, 4, 4, 2, 1, 2, 45, 12, 4, 4, 4, 36, 1])
     }
     
     func testAddUntypedMap() {
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(keyString: "a", value: 12)
             flx.add(keyString: "", value: 45)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         // then
         expect(encodedData: encodedData, [97, 0, 0, 2, 2, 5, 2, 1, 2, 45, 12, 4, 4, 4, 36, 1])
     }
@@ -314,9 +314,9 @@ class FlexBufferBuilderTests: XCTestCase {
         
         
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(key: "age", value: 35)
-            flx.addVector(key: "flags"){
+            try!flx.addVector(key: "flags"){
                 flx.add(value: true)
                 flx.add(value: false)
                 flx.add(value: true)
@@ -324,13 +324,13 @@ class FlexBufferBuilderTests: XCTestCase {
             }
             flx.add(key: "weight", value: 72.5)
             flx.add(key: "name", value: "Maxim")
-            flx.addMap(key: "address"){
+            try!flx.addMap(key: "address"){
                 flx.add(key: "city", value: "Bla")
                 flx.add(key: "zip", value: "12345")
                 flx.add(key: "countryCode", value: "XX")
             }
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         
         expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 4, 4, 4, 4, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, nil, nil, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1])
     }
@@ -338,13 +338,13 @@ class FlexBufferBuilderTests: XCTestCase {
     func testMapWithIndirectValues() {
         
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(keyString: "c", indirectValue: UInt64(45))
             flx.add(keyString: "a", indirectValue: -20)
             flx.add(keyString: "b", indirectValue: Float(7.5))
-            flx.add(keyString: "d", indirectValue: 56.123)
+            try!flx.add(keyString: "d", indirectValue: 56.123)
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         
         expect(encodedData: encodedData, [99, 0, 45, 97, 0, 236, 98, 0, 0, 0, 240, 64, 100, 0, 0, 0, 57, 180, 200, 118, 190, 15, 76, 64, 4, 22, 20, 27, 16, 4, 1, 4, 27, 25, 32, 19, 24, 34, 28, 35, 8, 36, 1])
     }
@@ -352,13 +352,13 @@ class FlexBufferBuilderTests: XCTestCase {
     func testVectorWithIndirectValues() {
         
         let flx = FlexBuffer()
-        flx.addVector {
+        try!flx.addVector {
             flx.add(indirectValue: UInt64(45))
             flx.add(indirectValue: -20)
             flx.add(indirectValue: Float(7.5))
-            flx.add(indirectValue: Double(56.123))
+            try!flx.add(indirectValue: Double(56.123))
         }
-        let encodedData = flx.finish()
+        let encodedData = try!flx.finish()
         
         expect(encodedData: encodedData, [45, 236, nil, nil, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
     }
@@ -367,59 +367,59 @@ class FlexBufferBuilderTests: XCTestCase {
         let flx = FlexBuffer(initialSize: 1, options: [])
         
         flx.add(value:25)
-        expect(encodedData: flx.finish(), [25, 4, 1])
+        expect(encodedData: try!flx.finish(), [25, 4, 1])
     }
     
     func expect(_ v : Any, _ data : [UInt8]){
-        let _data = FlexBuffer.encodeInefficientButConvenient(v)
+        let _data = try!FlexBuffer.encodeInefficientButConvenient(v)
         // then
         XCTAssertEqual([UInt8](_data), data)
     }
     
     func expect(bools vs : [Bool], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
     func expect(ints vs : [Int], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
     func expect(uints vs : [UInt], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
     func expect(doubles vs : [Double], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
     func expect(floats vs : [Float], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
     func expect(strings vs : [String], _ data : [UInt8]){
         let flx = FlexBuffer()
-        flx.add(array:vs)
-        let encodedData = flx.finish()
+        try!flx.add(array:vs)
+        let encodedData = try!flx.finish()
         // then
         XCTAssertEqual([UInt8](encodedData), data)
     }
@@ -428,7 +428,7 @@ class FlexBufferBuilderTests: XCTestCase {
         let encoded = [UInt8](encodedData)
         for pair in zip(encoded, data) {
             if pair.1 != nil {
-                XCTAssertEqual(pair.0, pair.1, "\(pair.0) != \(pair.1) in [\(encoded) - \(data)]")
+                XCTAssertEqual(pair.0, pair.1, "\(pair.0.description) != \(pair.1.debugDescription) in [\(encoded) - \(data)]")
             }
         }
     }

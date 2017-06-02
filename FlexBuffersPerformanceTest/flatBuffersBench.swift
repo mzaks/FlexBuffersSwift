@@ -335,7 +335,7 @@ public extension FlatBuffersReader {
             return nil
         }
         
-        let position = objectOffset + propOffset
+        let position = objectOffset + Offset(propOffset)
         do {
             let localObjectOffset : Int32 = try scalar(at: Int(position))
             let offset = position + localObjectOffset
@@ -390,13 +390,13 @@ public extension FlatBuffersReader {
         guard index < vectorElementCount(vectorOffset: vectorOffset) else {
             return nil
         }
-        let valueStartPosition = Int(vectorOffset + MemoryLayout<Int32>.stride + (index * MemoryLayout<Int32>.stride))
+        let valueStartPosition = Int(Int(vectorOffset) + MemoryLayout<Int32>.stride + (index * MemoryLayout<Int32>.stride))
         do {
             let localOffset : Int32 = try scalar(at: valueStartPosition)
             if(localOffset == 0){
                 return nil
             }
-            return localOffset + valueStartPosition
+            return localOffset + Offset(valueStartPosition)
         } catch {
             return nil
         }
@@ -422,7 +422,7 @@ public extension FlatBuffersReader {
             return nil
         }
         
-        let valueStartPosition = Int(vectorOffset + MemoryLayout<Int32>.stride + (index * MemoryLayout<T>.stride))
+        let valueStartPosition = Int(Int(vectorOffset) + MemoryLayout<Int32>.stride + (index * MemoryLayout<T>.stride))
         
         do {
             return try scalar(at: valueStartPosition) as T
@@ -446,7 +446,7 @@ public extension FlatBuffersReader {
         if propOffset == 0 {
             return defaultValue
         }
-        let position = Int(objectOffset + propOffset)
+        let position = Int(objectOffset + Offset(propOffset))
         do {
             return try scalar(at: position)
         } catch {
@@ -468,7 +468,7 @@ public extension FlatBuffersReader {
         if propOffset == 0 {
             return nil
         }
-        let position = Int(objectOffset + propOffset)
+        let position = Int(objectOffset + Offset(propOffset))
         do {
             return try scalar(at: position) as T
         } catch {
@@ -967,7 +967,7 @@ public final class FlatBuffersBuilder {
             return cursor
         }
         align(size: 4, additionalBytes: 0)
-        let _offset = Int32(cursor) - offset + MemoryLayout<Int32>.stride;
+        let _offset = Offset(cursor) - offset + Offset(MemoryLayout<Int32>.stride);
         insert(value: _offset)
         return cursor
     }
@@ -1100,7 +1100,7 @@ public final class FlatBuffersBuilder {
         var index = currentVTable.count - 1
         while(index>=0) {
             // Offset relative to the start of the table.
-            let off = Int16(currentVTable[index] != 0 ? Int32(vtableloc) - currentVTable[index] : 0);
+            let off = Int16(currentVTable[index] != 0 ? Int32(vtableloc) - currentVTable[index] : Int32(0));
             insert(value: off);
             index -= 1
         }

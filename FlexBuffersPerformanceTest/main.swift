@@ -33,18 +33,18 @@ func getMegabytesUsed() -> Float? {
 }
 
 func createContainer(flx : FlexBuffer) throws -> Data {
-    flx.addMap {
+    try!flx.addMap {
         flx.add(key: "fruit", value:2)
         flx.add(key: "initialized", value:true)
-        flx.addVector(key:"list") {
+        try!flx.addVector(key:"list") {
             for i in 0..<3 {
                 let ident : UInt64 = 0xABADCAFE + UInt64(i)
-                flx.addMap {
+                try!flx.addMap {
                     flx.add(key: "name", value: "Hello, World!")
                     flx.add(key: "postfix", value: UInt(33 + i))
-                    flx.add(key: "rating" , indirectValue: 3.1415432432445543543+Double(i))
-                    flx.addMap(key:"sibling") {
-                        flx.addMap(key:"parent") {
+                    try!flx.add(key: "rating" , indirectValue: 3.1415432432445543543+Double(i))
+                    try!flx.addMap(key:"sibling") {
+                        try!flx.addMap(key:"parent") {
                             flx.add(key: "count", indirectValue: 10000 + i)
                             flx.add(key: "id", indirectValue: ident)
                             flx.add(key: "length", indirectValue: UInt(1000000 + i))
@@ -59,7 +59,7 @@ func createContainer(flx : FlexBuffer) throws -> Data {
         }
         flx.add(key: "location", value: "http://google.com/flatbuffers/")
     }
-    return flx.finish()
+    return try!flx.finish()
 }
 
 let object = [
@@ -119,7 +119,7 @@ let object = [
 ] as [String : Any]
 
 func create() -> Data {
-    return FlexBuffer.encodeInefficientButConvenient(object)
+    return try!FlexBuffer.encodeInefficientButConvenient(object)
 }
 
 let object2 = [
@@ -188,7 +188,7 @@ let jsonStringUnsortedData = "{\"list\":[{\"name\":\"Hello, World!\",\"postfix\"
 
 
 func createFlexBufferFromJsonString() -> Data {
-    return FlexBuffer.dataFrom(jsonData: jsonStringData!, initialSize: 800, options: [])
+    return try!FlexBuffer.dataFrom(jsonData: jsonStringData!, initialSize: 800, options: [])
 }
 
 func createFlatBufferContainer() -> Data {
@@ -197,8 +197,8 @@ func createFlatBufferContainer() -> Data {
     
     for i in 0..<veclen { // 0xABADCAFEABADCAFE will overflow in usage
         let ident : UInt64 = 0xABADCAFE + UInt64(i)
-        let foo = Foo(id: ident, count: 10000 + i, prefix: 64 + i, length: UInt32(1000000 + i))
-        let bar = Bar(parent: foo, time: 123456 + i, ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
+        let foo = Foo(id: ident, count: 10000 + Int16(i), prefix: 64 + Int8(i), length: UInt32(1000000 + i))
+        let bar = Bar(parent: foo, time: 123456 + Int32(i), ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
         let name = "Hello, World!"
         let foobar = FooBar(sibling: bar, name: name, rating: 3.1415432432445543543+Double(i), postfix: UInt8(33 + i))
         foobars[i] = foobar
@@ -216,8 +216,8 @@ func createFlatBufferContainerWithoutDataDuplication() -> Data {
     
     for i in 0..<veclen { // 0xABADCAFEABADCAFE will overflow in usage
         let ident : UInt64 = 0xABADCAFE + UInt64(i)
-        let foo = Foo(id: ident, count: 10000 + i, prefix: 64 + i, length: UInt32(1000000 + i))
-        let bar = Bar(parent: foo, time: 123456 + i, ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
+        let foo = Foo(id: ident, count: 10000 + Int16(i), prefix: 64 + Int8(i), length: UInt32(1000000 + i))
+        let bar = Bar(parent: foo, time: 123456 + Int32(i), ratio: 3.14159 + Float(i), size: UInt16(10000 + i))
         let name = "Hello, World!"
         let foobar = FooBar(sibling: bar, name: name, rating: 3.1415432432445543543+Double(i), postfix: UInt8(33 + i))
         foobars[i] = foobar
@@ -381,7 +381,7 @@ private func use3(_ reader : FlatBuffersMemoryReader, start : Int) -> Int
 
 private func use4(_ data : Data, start : Int) -> Int
 {
-    let flxData = FlexBuffer.dataFrom(jsonData: data)
+    let flxData = try!FlexBuffer.dataFrom(jsonData: data)
     var sum:Int = Int(start)
     let root = FlexBuffer.decode(data: flxData)!.asMap!
     sum = sum &+ root["location"]!.asString!.utf8.count

@@ -12,25 +12,25 @@ import FlexBuffers
 class JsonToFlexConverterTest: XCTestCase {
 
     func testJSONObjectOnePropertyToInt() {
-        let data = FlexBuffer.dataFrom(jsonData:"{a:25}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{a:25}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(25, o!["a"]?.asInt!)
     }
     
     func testJSONObjectOnePropertyToIntWithQuotes() {
-        let data = FlexBuffer.dataFrom(jsonData:"{\("a"):25}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{\("a"):25}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(25, o!["a"]?.asInt!)
     }
 
     func testJSONObjectOnePropertyToFloat() {
-        let data = FlexBuffer.dataFrom(jsonData:"{\("a"):2.5}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{\("a"):2.5}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(2.5, o!["a"]?.asDouble!)
     }
     
     func testJSONObjectWithArrayAndObject() {
-        let data = FlexBuffer.dataFrom(jsonData:"{my_name:{a:123, b:null}, _vec: [true, 123, 0.7, \"hello\"]}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{my_name:{a:123, b:null}, _vec: [true, 123, 0.7, \"hello\"]}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(123, o?["my_name"]?["a"]?.asInt)
         XCTAssertEqual(nil, o?["my_name"]?["b"]?.asString)
@@ -41,25 +41,25 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONObjectOnePropertyToString() {
-        let data = FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdlfkjw23424\"}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdlfkjw23424\"}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual("slkfjsdlfkjw23424", o!["name"]?.asString!)
     }
     
     func testJSONObjectOnePropertyToStringWithEscaping() {
-        let data = FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdl\\\"\\n\\r\\{}[]:,  tfkjw23424\"}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdl\\\"\\n\\r\\{}[]:,  tfkjw23424\"}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual("slkfjsdl\\\"\\n\\r\\{}[]:,  tfkjw23424", o!["name"]?.asString!)
     }
     
     func testJSONObjectOnePropertyToStringWithEmoji() {
-        let data = FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdlfkjw23424😒😒🤓😎\"}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdlfkjw23424😒😒🤓😎\"}".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual("slkfjsdlfkjw23424😒😒🤓😎", o!["name"]?.asString!)
     }
     
     func testJSONArrayOfIntegers() {
-        let data = FlexBuffer.dataFrom(jsonData:"[1, -424244, 333333, 0,     -0, 3e3, 3E5]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[1, -424244, 333333, 0,     -0, 3e3, 3E5]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(1, o![0]?.asInt)
         XCTAssertEqual(-424244, o![1]?.asInt)
@@ -71,7 +71,7 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONArrayOfFloats() {
-        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, 0.55555, 0.76543, 1e-2, 1.222e+2, 1.222E-2]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, 0.55555, 0.76543, 1e-2, 1.222e+2, 1.222E-2]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(0.1, o![0]?.asFloat!)
         XCTAssertEqual(0.25, o![1]?.asFloat!)
@@ -84,7 +84,7 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONArrayOfFloatsAndNull() {
-        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, null, 0.55555, 0.76543]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, null, 0.55555, 0.76543]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(0.1, o![0]?.asFloat!)
         XCTAssertEqual(0.25, o![1]?.asFloat!)
@@ -95,7 +95,7 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONArrayBools() {
-        let data = FlexBuffer.dataFrom(jsonData:"[true, false, true]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[true, false, true]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(true, o![0]?.asBool)
         XCTAssertEqual(false, o![1]!.asBool)
@@ -103,7 +103,7 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONArrayOfFloatsAndTrue() {
-        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, true, 0.55555, 0.76543]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, true, 0.55555, 0.76543]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(0.1, o![0]?.asFloat)
         XCTAssertEqual(0.25, o![1]?.asFloat)
@@ -114,14 +114,14 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONArrayOfFloatsWhereOneNumberIsNotValid() {
-        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 025]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 025]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         XCTAssertEqual(0.1, o![0]?.asFloat!)
         XCTAssertEqual("025", o![1]?.asString!)
     }
     
     func testJSONArrayOfFloatsAndFalse() {
-        let data = FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, false, 0.55555, -0.76543]".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, false, 0.55555, -0.76543]".data(using: .utf8)!)
         let o = FlexBuffer.decode(data: data)
         print(o!.debugDescription)
         XCTAssertEqual(0.1, o![0]?.asFloat)
@@ -133,7 +133,7 @@ class JsonToFlexConverterTest: XCTestCase {
     }
     
     func testJSONSample(){
-        let data = FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
+        let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
         let accessor = FlexBuffer.decode(data:data)
         let name = accessor?["name"]?.asString
         let day = accessor?["birthday"]?["day"]?.asInt
@@ -147,15 +147,13 @@ class JsonToFlexConverterTest: XCTestCase {
         let jsonData = try!Data(contentsOf: url)
         
         var t = CFAbsoluteTimeGetCurrent()
-        let data = FlexBuffer.dataFrom(jsonData: jsonData)
+        let data = try!FlexBuffer.dataFrom(jsonData: jsonData)
         let o = FlexBuffer.decode(data: data)
         let u = o!["data"]![1]!["url"]!.asString!
         let c = o!["data"]!.count
         let o_u = o!["data"]![1]!["images"]!["original"]!["url"]!.asString!
         print("<<<<<<<<<<<\(CFAbsoluteTimeGetCurrent() - t)")
         XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u)
-        let u_u = URL(string: u)
-        print(u_u)
         XCTAssertEqual(25, c)
         XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u)
         
@@ -164,7 +162,6 @@ class JsonToFlexConverterTest: XCTestCase {
         let u1 = ((o1["data"] as! NSArray)[1] as! NSDictionary)["url"] as! String
         let c1 = (o1["data"] as! NSArray).count
         let o_u1 = ((((o1["data"] as! NSArray)[1] as! NSDictionary)["images"] as! NSDictionary)["original"] as! NSDictionary)["url"] as! String
-        print(">>>>>>>>>>>>>>>>>>>>\(CFAbsoluteTimeGetCurrent() - t)")
         XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u1)
         XCTAssertEqual(25, c1)
         XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u1)

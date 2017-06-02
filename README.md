@@ -6,32 +6,32 @@ FlexBuffers is a self suficient binary data representation which can encode numb
 ```swift
 // {vec:[-100,"Fred",4.0], bar:[1,2,3], bar3:[1,2,3], foo:100, mymap:{foo:"Fred"}}
 let flx = FlexBuffer()
-flx.addMap {
-    flx.addVector(key: "vec") {
+try!flx.addMap {
+    try!flx.addVector(key: "vec") {
         flx.add(value: -100)
         flx.add(value: "Fred")
         flx.add(value:4.0)
     }
-    flx.add(key: "bar", value: [1, 2, 3])
-    flx.addVector(key: "bar3") {
+    try!flx.add(key: "bar", value: [1, 2, 3])
+    try!flx.addVector(key: "bar3") {
         flx.add(value:1)
         flx.add(value:2)
         flx.add(value:3)
     }
-    flx.add(key: "foo", value: 100)
-    flx.addMap(key: "mymap") {
+    try!flx.add(key: "foo", value: 100)
+    try!flx.addMap(key: "mymap") {
         flx.add(key: "foo", value: "Fred")
     }
 }
 let data = flx.finish()
 
-let map = FlexBuffer.decode(data: data)!.asMap!
+let map = try!FlexBuffer.decode(data: data)!.asMap!
 print(map.debugDescription)
 ```
 
 There is also an API for convinient encoding, which is however inefficient
 ```swift
-let data = FlexBuffer.encodeInefficientButConvenient([
+let data = try!FlexBuffer.encodeInefficientButConvenient([
     "age" : 35,
     "flags" : [true, false, true, true],
     "weight" : 72.5,
@@ -46,7 +46,7 @@ let data = FlexBuffer.encodeInefficientButConvenient([
 FlexBuffersSwift also incorporates it's own efficient JSON parser which is used to transform JSON to FlexBuffer binary.
 
 ```
-let data = FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
+let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
 ```
 
 The binary can than be read with no parsing costs in a strong typed way:

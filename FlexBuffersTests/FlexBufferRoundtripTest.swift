@@ -15,24 +15,24 @@ class FlexBufferRoundtripTest: XCTestCase {
     func test1() {
         // {vec:[-100,"Fred",4.0],bar:[1,2,3],bar3:[1,2,3]foo:100,mymap{foo:"Fred"}}
         let flx = FlexBuffer()
-        flx.addMap {
-            flx.addVector(key: "vec") {
+        try!flx.addMap {
+            try!flx.addVector(key: "vec") {
                 flx.add(value: -100)
                 flx.add(value: "Fred")
                 flx.add(value:4.0)
             }
-            flx.add(key: "bar", value: [1, 2, 3])
-            flx.addVector(key: "bar3") {
+            try!flx.add(key: "bar", value: [1, 2, 3])
+            try!flx.addVector(key: "bar3") {
                 flx.add(value:1)
                 flx.add(value:2)
                 flx.add(value:3)
             }
             flx.add(key: "foo", value: 100)
-            flx.addMap(key: "mymap") {
+            try!flx.addMap(key: "mymap") {
                 flx.add(key: "foo", value: "Fred")
             }
         }
-        let data = flx.finish()
+        let data = try!flx.finish()
         
         let v = FlexBuffer.decode(data: data)!.asMap!
         
@@ -58,17 +58,17 @@ class FlexBufferRoundtripTest: XCTestCase {
 
     func test2(){
         let flx = FlexBuffer()
-        flx.addMap {
+        try!flx.addMap {
             flx.add(key: "age", value: 35)
-            flx.add(key: "flags", value: [true, false, true, true])
+            try!flx.add(key: "flags", value: [true, false, true, true])
             flx.add(key: "weight", value: 72.5)
-            flx.addMap(key: "address"){
+            try!flx.addMap(key: "address"){
                 flx.add(key: "city", value: "Bla")
                 flx.add(key: "zip", value: "12345")
                 flx.add(key: "countryCode", value: "XX")
             }
         }
-        let data = flx.finish()
+        let data = try!flx.finish()
         
         let v = FlexBuffer.decode(data: data)!.asMap!
         XCTAssertEqual(v.count, 4)
@@ -86,7 +86,7 @@ class FlexBufferRoundtripTest: XCTestCase {
     }
     
     func test3(){
-        let data = FlexBuffer.encodeInefficientButConvenient([
+        let data = try!FlexBuffer.encodeInefficientButConvenient([
             "age" : 35,
             "flags" : [true, false, true, true],
             "weight" : 72.5,
@@ -113,7 +113,7 @@ class FlexBufferRoundtripTest: XCTestCase {
     
     
     func test4(){
-        let data = FlexBuffer.encodeInefficientButConvenient([
+        let data = try!FlexBuffer.encodeInefficientButConvenient([
             "location" : "http://google.com/flatbuffers/",
             "initialized" : true,
             "fruit" : 2,
