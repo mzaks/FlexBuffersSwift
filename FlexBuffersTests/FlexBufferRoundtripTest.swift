@@ -73,13 +73,13 @@ class FlexBufferRoundtripTest: XCTestCase {
         let v = FlexBuffer.decode(data: data)!.asMap!
         XCTAssertEqual(v.count, 4)
         XCTAssertEqual(v["age"]?.asInt, 35)
-        XCTAssertEqual(v["flags"]?.asVector?.count, 4)
+        XCTAssertEqual(v["flags"]?.count, 4)
         XCTAssertEqual(v["flags"]?.asVector?[0]?.asBool, true)
         XCTAssertEqual(v["flags"]?.asVector?[1]?.asBool, false)
         XCTAssertEqual(v["flags"]?.asVector?[2]?.asBool, true)
         XCTAssertEqual(v["flags"]?.asVector?[3]?.asBool, true)
         XCTAssertEqual(v["weight"]?.asFloat, 72.5)
-        XCTAssertEqual(v["address"]?.asMap?.count, 3)
+        XCTAssertEqual(v["address"]?.count, 3)
         XCTAssertEqual(v["address"]?.asMap?["city"]?.asString, "Bla")
         XCTAssertEqual(v["address"]?.asMap?["zip"]?.asString, "12345")
         XCTAssertEqual(v["address"]?.asMap?["countryCode"]?.asString, "XX")
@@ -170,5 +170,6 @@ class FlexBufferRoundtripTest: XCTestCase {
         XCTAssertEqual(v["location"]?.asString, "http://google.com/flatbuffers/")
         XCTAssertEqual(v["list"]?.asVector?.count, 3)
         XCTAssertEqual(v["list"]?[1]?["sibling"]?["parent"]?["prefix"]?.asInt, 65)
+        XCTAssertEqual(v["list"]?.count, 3)
     }
 }

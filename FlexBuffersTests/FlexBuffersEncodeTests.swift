@@ -363,6 +363,26 @@ class FlexBufferBuilderTests: XCTestCase {
         expect(encodedData: encodedData, [45, 236, nil, nil, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
     }
     
+    func testHavingCatchStatement() {
+        
+        let flx = FlexBuffer()
+        var encodedData : Data = Data()
+        do {
+            try flx.addVector {
+                flx.add(indirectValue: UInt64(45))
+                flx.add(indirectValue: -20)
+                flx.add(indirectValue: Float(7.5))
+                try flx.add(indirectValue: Double(56.123))
+            }
+            encodedData = try flx.finish()
+        } catch {
+            XCTFail("Should not throw")
+        }
+        
+        
+        expect(encodedData: encodedData, [45, 236, nil, nil, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
+    }
+    
     func testGrowInternalBuffer() {
         let flx = FlexBuffer(initialSize: 1, options: [])
         

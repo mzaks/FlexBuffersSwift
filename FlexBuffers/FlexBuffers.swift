@@ -30,43 +30,43 @@ public class FlexBuffer {
         offset = 0
     }
     
-    public func addVector(_ f : ()->()) throws {
+    public func addVector(_ f : () throws -> ()) throws {
         let start = startVector()
-        f()
+        try f()
         _ = try endVector(start: start, typed: false, fixed: false)
     }
     
-    public func addVector(key : StaticString, _ f : ()->()) throws {
+    public func addVector(key : StaticString, _ f : () throws -> ()) throws {
         self.key(key)
         let start = startVector()
-        f()
+        try f()
         _ = try endVector(start: start, typed: false, fixed: false)
     }
     
-    public func addVector(keyString : String, _ f : ()->()) throws {
+    public func addVector(keyString : String, _ f : () throws -> ()) throws {
         self.key(keyString)
         let start = startVector()
-        f()
+        try f()
         _ = try endVector(start: start, typed: false, fixed: false)
     }
     
-    public func addMap(_ f : ()->()) throws {
+    public func addMap(_ f : () throws -> ()) throws {
         let start = startMap()
-        f()
+        try f()
         try endMap(start: start)
     }
     
-    public func addMap(key : StaticString, _ f : ()->()) throws {
+    public func addMap(key : StaticString, _ f : () throws -> ()) throws {
         self.key(key)
         let start = startMap()
-        f()
+        try f()
         try endMap(start: start)
     }
     
-    public func addMap(keyString : String, _ f : ()->()) throws {
+    public func addMap(keyString : String, _ f : () throws -> ()) throws {
         self.key(keyString)
         let start = startMap()
-        f()
+        try f()
         try endMap(start: start)
     }
     
@@ -1171,6 +1171,9 @@ public struct FlxbReference : CustomDebugStringConvertible {
     }
     
     public var count : Int? {
+        if type.isTypedVector {
+            return asVector?.count
+        }
         switch type {
         case .string :
             if let p = self.indirect {
@@ -1178,20 +1181,9 @@ public struct FlxbReference : CustomDebugStringConvertible {
             }
             return nil
         case .vector :
-            if let p = self.indirect {
-                if type.isTypedVector {
-                    return FlxbVector(dataPointer: p, byteWidth: byteWidth, type: type.typedVectorElementType).count
-                } else {
-                    return FlxbVector(dataPointer: p, byteWidth: byteWidth).count
-                }
-                
-            }
-            return nil
+            return asVector?.count
         case .map :
-            if let p = self.indirect {
-                return FlxbMap(dataPointer: p, byteWidth: byteWidth).count
-            }
-            return nil
+            return asMap?.count
         default:
             return nil
         }
