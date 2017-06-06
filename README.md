@@ -1,4 +1,6 @@
 # FlexBuffersSwift
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+
 Swift implementation of FlexBuffers - a sub project of Googles FlatBuffers project [https://google.github.io/flatbuffers/].
 FlexBuffers is a self suficient binary data representation which can encode numbers, strings, maps and vectors.
 
