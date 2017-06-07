@@ -30,6 +30,10 @@ public class FlexBuffer {
         offset = 0
     }
     
+    deinit {
+        buffer.deallocate(bytes: currentSize, alignedTo: 1)
+    }
+    
     public func addVector(_ f : () throws -> ()) throws {
         let start = startVector()
         try f()
