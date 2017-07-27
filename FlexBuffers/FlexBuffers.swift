@@ -23,10 +23,16 @@ public class FlexBuffer {
     var stringPool : [String:Int] = [:]
     
     public init(initialSize : Int = 2048, options : BuilderOptions = []) {
-        self.initialSize = initialSize
-        self.currentSize = initialSize
+        if initialSize <= 0 {
+            self.initialSize = 2048
+            self.currentSize = 2048
+        } else {
+            self.initialSize = initialSize
+            self.currentSize = initialSize
+        }
+        
         self.options = options
-        buffer = UnsafeMutableRawPointer.allocate(bytes: initialSize, alignedTo: 1)
+        buffer = UnsafeMutableRawPointer.allocate(bytes: self.initialSize, alignedTo: 1)
         offset = 0
     }
     
@@ -206,6 +212,10 @@ public class FlexBuffer {
         let chars = s.utf8CString
         let length = chars.count - 1
         let bitWidth = BitWidth.width(uint: UInt64(length))
+        if options.contains(.shareStrings), let sloc = stringPool[s] {
+            stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
+            return
+        }
         let byteWidth = align(width: bitWidth)
         write(value: length, size: byteWidth)
         let sloc = offset
@@ -213,9 +223,15 @@ public class FlexBuffer {
             write(value: c, size: 1)
         }
         stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
+        if options.contains(.shareStrings) {
+            stringPool[s] = sloc
+        }
     }
     
     fileprivate func string(_ s : StaticString) {
+        guard options.contains(.shareStrings) == false else {
+            return string(s.description)
+        }
         var sloc = offset
         let bitWidth = s.withUTF8Buffer { (buffer) -> BitWidth in
             let length = buffer.count
@@ -233,6 +249,15 @@ public class FlexBuffer {
     }
     
     fileprivate func string(_ start : UnsafeMutablePointer<UInt8>, _ count : Int) {
+        guard options.contains(.shareStrings) == false else {
+            start.withMemoryRebound(to: CChar.self, capacity: 1) { ptr in
+                if let s = NSString(bytes: UnsafeRawPointer(start), length: count, encoding: String.Encoding.utf8.rawValue) {
+                    string(s as String)
+                }
+            }
+            
+            return
+        }
         var sloc = offset
         
         let bitWidth = BitWidth.width(uint: UInt64(count))
@@ -1632,7 +1657,7 @@ fileprivate enum Type : UInt8 {
         case 4:
             return Type(rawValue: self.rawValue - Type.int.rawValue + Type.vector_int4.rawValue) ?? Type.null
         default:
-            throw FlexBufferEncodeError(message: "Typed vector shoudl be of length 0, 2, 3, 4. This one is of lenght \(length)")
+            throw FlexBufferEncodeError(message: "Typed vector should be of length 0, 2, 3, 4. This one is of lenght \(length)")
         }
     }
     
@@ -1685,7 +1710,7 @@ struct FlexBufferEncodeError: Error {
 
 // MARK: - JSON Parser
 extension FlexBuffer {
-    public static func dataFrom(jsonData data : Data, initialSize : Int = 2048, options : BuilderOptions = []) throws -> Data {
+    public static func dataFrom(jsonData data : Data, initialSize : Int = 2048, options : BuilderOptions = [], forceNumberParsing: Bool = false) throws -> Data {
         var stack = [Int]()
         var tokenPointerCapacity = 32
         var tokenPointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
@@ -1813,7 +1838,7 @@ extension FlexBuffer {
                 return
             }
             
-            if tokenIsQuoted == false {
+            if tokenIsQuoted == false || forceNumberParsing {
                 if try addNumber(tokenPointerStart, tokenPointerCurrent) {
                     return
                 }

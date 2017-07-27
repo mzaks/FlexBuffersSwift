@@ -146,24 +146,30 @@ class JsonToFlexConverterTest: XCTestCase {
         let url = Bundle.init(for: JsonToFlexConverterTest.self).url(forResource: "giphy_trending", withExtension: "json")!
         let jsonData = try!Data(contentsOf: url)
         
-        var t = CFAbsoluteTimeGetCurrent()
-        let data = try!FlexBuffer.dataFrom(jsonData: jsonData)
+        let data = try!FlexBuffer.dataFrom(jsonData: jsonData, initialSize: jsonData.count, options: [.shareKeysAndStrings], forceNumberParsing: true)
+        
+        XCTAssertLessThan(data.count, jsonData.count)
+        
+        print("JSON: \(jsonData.count) > Flxb: \(data.count) by \(Int(Float(jsonData.count) / Float(data.count) * 100))%")
+        
         let o = FlexBuffer.decode(data: data)
         let u = o!["data"]![1]!["url"]!.asString!
         let c = o!["data"]!.count
         let o_u = o!["data"]![1]!["images"]!["original"]!["url"]!.asString!
-        print("<<<<<<<<<<<\(CFAbsoluteTimeGetCurrent() - t)")
+        let s = o!["data"]![1]!["images"]!["original"]!["size"]!.asInt!
         XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u)
         XCTAssertEqual(25, c)
+        XCTAssertEqual(1276846, s)
         XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u)
         
-        t = CFAbsoluteTimeGetCurrent()
         let o1 = try!JSONSerialization.jsonObject(with: jsonData, options: []) as! NSDictionary
         let u1 = ((o1["data"] as! NSArray)[1] as! NSDictionary)["url"] as! String
         let c1 = (o1["data"] as! NSArray).count
         let o_u1 = ((((o1["data"] as! NSArray)[1] as! NSDictionary)["images"] as! NSDictionary)["original"] as! NSDictionary)["url"] as! String
+        let s1 = ((((o1["data"] as! NSArray)[1] as! NSDictionary)["images"] as! NSDictionary)["original"] as! NSDictionary)["size"] as! String
         XCTAssertEqual("http://giphy.com/gifs/nirvana-bored-kurt-cobain-qc1waqAag4tZC", u1)
         XCTAssertEqual(25, c1)
+        XCTAssertEqual("1276846", s1)
         XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u1)
     }
 }

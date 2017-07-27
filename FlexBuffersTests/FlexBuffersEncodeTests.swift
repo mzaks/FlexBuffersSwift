@@ -346,7 +346,7 @@ class FlexBufferBuilderTests: XCTestCase {
         }
         let encodedData = try!flx.finish()
         
-        expect(encodedData: encodedData, [99, 0, 45, 97, 0, 236, 98, 0, 0, 0, 240, 64, 100, 0, 0, 0, 57, 180, 200, 118, 190, 15, 76, 64, 4, 22, 20, 27, 16, 4, 1, 4, 27, 25, 32, 19, 24, 34, 28, 35, 8, 36, 1])
+        expect(encodedData: encodedData, [99, 0, 45, 97, 0, 236, 98, 0, 0, 0, 240, 64, 100, 0, nil, nil, 57, 180, 200, 118, 190, 15, 76, 64, 4, 22, 20, 27, 16, 4, 1, 4, 27, 25, 32, 19, 24, 34, 28, 35, 8, 36, 1])
     }
     
     func testVectorWithIndirectValues() {
@@ -388,6 +388,31 @@ class FlexBufferBuilderTests: XCTestCase {
         
         flx.add(value:25)
         expect(encodedData: try!flx.finish(), [25, 4, 1])
+    }
+    
+    func testInitializeSizeZero() {
+        let flx = FlexBuffer(initialSize: 0, options: [])
+        
+        flx.add(value:25)
+        expect(encodedData: try!flx.finish(), [25, 4, 1])
+    }
+    
+    func testInitializeSizeNegative() {
+        let flx = FlexBuffer(initialSize: -45, options: [])
+        
+        flx.add(value:25)
+        expect(encodedData: try!flx.finish(), [25, 4, 1])
+    }
+    func testDictOfEmptyArrays() {
+        let flx = FlexBuffer(initialSize: 0, options: [])
+        
+        try?flx.addMap {
+            let a = [Bool]()
+            let b = [Int]()
+            try?flx.add(key: "a", value: a.map{$0})
+            try?flx.add(key: "b", value: b.map{$0})
+        }
+        expect(encodedData: try!flx.finish(), [97, 0, 0, 98, 0, 0, 2, 7, 5, 2, 1, 2, 9, 7, 56, 56, 4, 36, 1])
     }
     
     func expect(_ v : Any, _ data : [UInt8]){
