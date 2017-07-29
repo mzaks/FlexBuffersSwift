@@ -1278,7 +1278,11 @@ public struct FlxbReference : CustomDebugStringConvertible {
             return "\(v)"
         }
         if let v = asString {
-            return "\"\(v)\""
+            let escaped_v = v.replacingOccurrences(of: "\"", with: "\\\"")
+                                .replacingOccurrences(of: "\n", with: "\\n")
+                                .replacingOccurrences(of: "\r", with: "\\r")
+                                .replacingOccurrences(of: "\t", with: "\\t")
+            return "\"\(escaped_v)\""
         }
         if let v = asMap {
             return v.debugDescription
@@ -1287,6 +1291,10 @@ public struct FlxbReference : CustomDebugStringConvertible {
             return v.debugDescription
         }
         return "null"
+    }
+    
+    public var jsonString: String {
+        return debugDescription.replacingOccurrences(of: "/", with: "\\/")
     }
 }
 

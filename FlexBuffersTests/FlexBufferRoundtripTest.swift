@@ -172,4 +172,26 @@ class FlexBufferRoundtripTest: XCTestCase {
         XCTAssertEqual(v["list"]?[1]?["sibling"]?["parent"]?["prefix"]?.asInt, 65)
         XCTAssertEqual(v["list"]?.count, 3)
     }
+    
+    func testTransformVectorToArray(){
+        let flx = FlexBuffer()
+        try?flx.add(array: [true, true , false, true])
+        let data = try!flx.finish()
+        
+        let v = FlexBuffer.decode(data: data)!.asVector!
+        
+        let array = v.makeIterator().flatMap{$0.asBool}
+        
+        XCTAssertEqual(array, [true, true , false, true])
+    }
+    
+    func testStringWithSpecialCharacter() {
+        let flx = FlexBuffer()
+        flx.add(value: "hello \t \" there / \n\r")
+        let flxData = try!flx.finish()
+        let flx1 = FlexBuffer.decode(data: flxData)
+        XCTAssertEqual(flx1?.debugDescription, "\"hello \\t \\\" there / \\n\\r\"")
+        XCTAssertEqual(flx1?.jsonString, "\"hello \\t \\\" there \\/ \\n\\r\"")
+        print(flx1!.debugDescription)
+    }
 }
