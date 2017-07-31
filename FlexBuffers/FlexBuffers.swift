@@ -1046,6 +1046,16 @@ public extension FlexBuffer {
 }
 
 // MARK: - ACCESSORS
+
+public struct FlxbData {
+    public let data: Data
+    public let root: FlxbReference?
+    init(data: Data) {
+        self.data = data
+        self.root = FlexBuffer.decode(data: data)
+    }
+}
+
 public struct FlxbReference : CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let parentWidth : UInt8
@@ -1718,7 +1728,7 @@ struct FlexBufferEncodeError: Error {
 
 // MARK: - JSON Parser
 extension FlexBuffer {
-    public static func dataFrom(jsonData data : Data, initialSize : Int = 2048, options : BuilderOptions = [], forceNumberParsing: Bool = false) throws -> Data {
+    public static func dataFrom(jsonData data : Data, initialSize : Int = 2048, options : BuilderOptions = [], forceNumberParsing: Bool = false) throws -> FlxbData {
         var stack = [Int]()
         var tokenPointerCapacity = 32
         var tokenPointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
@@ -1967,6 +1977,7 @@ extension FlexBuffer {
                 i += 1
             }
         }
-        return try flx.finish()
+        let flxbData = try flx.finish()
+        return FlxbData(data: flxbData)
     }
 }
