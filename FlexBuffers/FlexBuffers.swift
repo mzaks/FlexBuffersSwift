@@ -1155,6 +1155,9 @@ public struct FlxbReference : CustomDebugStringConvertible {
         case .float :
             return readFloat(pointer: dataPointer, width: parentWidth)
         case .indirect_float :
+            if byteWidth == 8 {
+                return nil
+            }
             if let p = self.indirect {
                 return readFloat(pointer: p, width: byteWidth)
             }
@@ -1390,7 +1393,7 @@ public struct FlxbVector : Sequence, CustomDebugStringConvertible {
                 values.append("null")
             }
         }
-        let list = values.joined(separator: ", ")
+        let list = values.joined(separator: ",")
         return "[\(list)]"
     }
 }
@@ -1551,10 +1554,10 @@ public struct FlxbMap : Sequence, CustomDebugStringConvertible {
     public var debugDescription: String {
         if let keys = keys?.map({$0.debugDescription}), let values = values?.map({$0.debugDescription}) {
             let pairs = zip(keys, values)
-            let list = pairs.map({"\($0) : \($1)"})
-            return "{\(list.joined(separator: ", "))}"
+            let list = pairs.map({"\($0):\($1)"})
+            return "{\(list.joined(separator: ","))}"
         }
-        return "{\(keys.debugDescription) : \(values.debugDescription)}"
+        return "{\(keys.debugDescription):\(values.debugDescription)}"
     }
 }
 

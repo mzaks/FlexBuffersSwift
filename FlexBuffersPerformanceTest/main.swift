@@ -317,6 +317,36 @@ private func use2(_ data : Data, start : Int) -> Int
     return sum
 }
 
+private func use3(_ data : Data, start : Int) -> Int
+{
+    var sum:Int = Int(start)
+    let root = FlexBuffer.decode(data: data)!.asMap!
+    sum = sum &+ root["location"]!.asString!.utf8.count
+    sum = sum &+ root["fruit"]!.asInt!
+    sum = sum &+ (root["initialized"]!.asBool! ? 1 : 0)
+    
+    let list = root["list"]!.asVector!
+    for i in 0..<list.count {
+        let foobar = list[i]!.asMap!
+        sum = sum &+ foobar["name"]!.asString!.utf8.count
+        sum = sum &+ Int(foobar["postfix"]!.asInt!)
+        sum = sum &+ Int(foobar["rating"]!.asDouble!)
+        
+        let bar = foobar["sibling"]!.asMap!
+        
+        sum = sum &+ Int(bar["ratio"]!.asDouble!)
+        sum = sum &+ Int(bar["size"]!.asInt!)
+        sum = sum &+ bar["time"]!.asInt!
+        
+        let foo = bar["parent"]!.asMap!
+        sum = sum &+ foo["count"]!.asInt!
+        sum = sum &+ Int(foo["id"]!.asInt!)
+        sum = sum &+ Int(foo["length"]!.asInt!)
+        sum = sum &+ foo["prefix"]!.asInt!
+    }
+    return sum
+}
+
 
 private func useJSON(_ data : Data, start : Int) -> Int
 {
@@ -397,7 +427,7 @@ private func use4(_ data : Data, start : Int) -> Int
         
         let bar = foobar["sibling"]!.asMap!
         
-        sum = sum &+ Int(bar["ratio"]!.asFloat!)
+        sum = sum &+ Int(bar["ratio"]!.asDouble!)
         sum = sum &+ Int(bar["size"]!.asInt!)
         sum = sum &+ bar["time"]!.asInt!
         
@@ -433,6 +463,18 @@ print("\(data) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
+var datas0 = [Data!](repeating: nil, count: NumberOfEncodings)
+let flx0 = FlexBuffer(initialSize: 1, options: [])
+for i in 0 ..< NumberOfEncodings {
+    datas0[i] = FlxbData(data:try!createContainer(flx: flx0)).root!.jsonString.data(using: .utf8)
+}
+let data0 = datas0[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("Efficient FlexBuffers encoding to JSON string (x\(NumberOfEncodings)):")
+print("\(data0) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
 var datas1 = [Data!](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
@@ -444,8 +486,6 @@ print("Inefficient FlexBuffers encoding (x\(NumberOfEncodings)):")
 print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
-
-
 
 var datas2 = [Data!](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
@@ -555,7 +595,7 @@ m = getMegabytesUsed()!
 t = CFAbsoluteTimeGetCurrent()
 sum = 0
 for i in 0 ..< NumberOfDecodings {
-    sum += use1(data5, start: i)
+    sum += use3(data5, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
 print("Decoding FlexBuffers created from JSON string (x\(NumberOfDecodings)):")
