@@ -1047,12 +1047,15 @@ public extension FlexBuffer {
 
 // MARK: - ACCESSORS
 
-public struct FlxbData {
+public struct FlxbData : CustomDebugStringConvertible {
     public let data: Data
     public let root: FlxbReference?
     init(data: Data) {
         self.data = data
         self.root = FlexBuffer.decode(data: data)
+    }
+    public var debugDescription: String {
+        return self.root?.debugDescription ?? "\(data)"
     }
 }
 
