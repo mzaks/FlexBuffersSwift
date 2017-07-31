@@ -13,6 +13,7 @@
 		0B2092381E9194FA00EF3AF5 /* flatBuffersBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */; };
 		0B20923C1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */; };
 		0B2092401E992FDE00EF3AF5 /* giphy_trending.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */; };
+		0B2A86661F2F354E009F6849 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 0B2A86651F2F354E009F6849 /* README.md */; };
 		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
 		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
 		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
@@ -51,6 +52,7 @@
 		0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = flatBuffersBench.swift; sourceTree = "<group>"; };
 		0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsonToFlexConverterTest.swift; sourceTree = "<group>"; };
 		0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = giphy_trending.json; sourceTree = "<group>"; };
+		0B2A86651F2F354E009F6849 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferDecodeTest.swift; sourceTree = "<group>"; };
 		0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FlexBuffersPerformanceTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B6554FE1E1A9BF700782925 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -108,6 +110,7 @@
 		0BB1BE5B1E1271E900A9041B = {
 			isa = PBXGroup;
 			children = (
+				0B2A86651F2F354E009F6849 /* README.md */,
 				0BB1BE671E1271E900A9041B /* FlexBuffers */,
 				0BB1BE721E1271E900A9041B /* FlexBuffersTests */,
 				0B6554FD1E1A9BF700782925 /* FlexBuffersPerformanceTest */,
@@ -342,6 +345,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B2A86661F2F354E009F6849 /* README.md in Sources */,
 				0BB1BE801E12720400A9041B /* FlexBuffers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

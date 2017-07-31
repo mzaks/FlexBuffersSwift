@@ -48,13 +48,13 @@ let data = try!FlexBuffer.encodeInefficientButConvenient([
 FlexBuffersSwift also incorporates it's own efficient JSON parser which is used to transform JSON to FlexBuffer binary.
 
 ```
-let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
+let flxbData = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
 ```
 
 The binary can than be read with no parsing costs in a strong typed way:
 
 ```
-let accessor = FlexBuffer.decode(data:data)
+let accessor = flxbData.root
 let name = accessor?["name"]?.asString
 let day = accessor?["birthday"]?["day"]?.asInt
 ```
