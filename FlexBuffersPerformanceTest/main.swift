@@ -187,7 +187,7 @@ let jsonStringData = "{\"fruit\" : 2, \"initialized\" : true, \"list\" : [{\"nam
 let jsonStringUnsortedData = "{\"list\":[{\"name\":\"Hello, World!\",\"postfix\":33,\"rating\":3.141543243244554,\"sibling\":{\"size\":10000,\"ratio\":3.14159,\"time\":123456,\"parent\":{\"prefix\":64,\"length\":1000000,\"id\":2880293630,\"count\":10000}}},{\"name\":\"Hello, World!\",\"postfix\":34,\"rating\":4.141543243244554,\"sibling\":{\"size\":10001,\"ratio\":4.14159,\"time\":123457,\"parent\":{\"prefix\":65,\"length\":1000001,\"id\":2880293631,\"count\":10001}}},{\"name\":\"Hello, World!\",\"postfix\":35,\"rating\":5.141543243244554,\"sibling\":{\"size\":10002,\"ratio\":5.14159,\"time\":123458,\"parent\":{\"prefix\":66,\"length\":1000002,\"id\":2880293632,\"count\":10002}}}],\"initialized\":true,\"location\":\"http:\\/\\/google.com\\/flatbuffers\\/\",\"fruit\":2}".data(using: .utf8)
 
 
-func createFlexBufferFromJsonString() -> Data {
+func createFlexBufferFromJsonString() -> FlxbData {
     return try!FlexBuffer.dataFrom(jsonData: jsonStringData!, initialSize: 800, options: [])
 }
 
@@ -383,7 +383,7 @@ private func use4(_ data : Data, start : Int) -> Int
 {
     let flxData = try!FlexBuffer.dataFrom(jsonData: data)
     var sum:Int = Int(start)
-    let root = FlexBuffer.decode(data: flxData)!.asMap!
+    let root = flxData.root!.asMap!
     sum = sum &+ root["location"]!.asString!.utf8.count
     sum = sum &+ root["fruit"]!.asInt!
     sum = sum &+ (root["initialized"]!.asBool! ? 1 : 0)
@@ -486,7 +486,7 @@ m = getMegabytesUsed()!
 var datas5 = [Data!](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
-    datas5[i] = createFlexBufferFromJsonString()
+    datas5[i] = createFlexBufferFromJsonString().data
 }
 let data5 = datas5[0]!
 d = CFAbsoluteTimeGetCurrent() - t
