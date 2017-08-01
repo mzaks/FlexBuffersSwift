@@ -1995,6 +1995,8 @@ extension FlexBuffer {
                 i += 1
             }
         }
+        tokenPointerStart.deallocate(capacity: tokenPointerCapacity)
+        tokenNamePointerStart.deallocate(capacity: tokenNamePointerCapacity)
         let flxbData = try flx.finish()
         return FlxbData(data: flxbData)
     }
