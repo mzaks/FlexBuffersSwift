@@ -1551,6 +1551,18 @@ public struct FlxbMap : Sequence, CustomDebugStringConvertible {
         }
     }
     
+    public func toDict<T>(converter: (FlxbReference) -> T?) -> [String: T] {
+        var result =  [String: T](minimumCapacity: self.count)
+        for i in 0 ..< self.count {
+            if let key = keys?[i]?.asString,
+                let value = values?[i],
+                let convertedValue = converter(value) {
+                result[key] = convertedValue
+            }
+        }
+        return result
+    }
+    
     public var debugDescription: String {
         if let keys = keys?.map({$0.debugDescription}), let values = values?.map({$0.debugDescription}) {
             let pairs = zip(keys, values)

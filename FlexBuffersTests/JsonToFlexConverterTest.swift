@@ -36,7 +36,7 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(nil, o?["my_name"]?["b"]?.asString)
         XCTAssertEqual(true, o?["_vec"]?[0]?.asBool)
         XCTAssertEqual(123, o?["_vec"]?[1]?.asInt)
-        XCTAssertEqual(0.7, o?["_vec"]?[2]?.asFloat)
+        XCTAssertEqual(0.7, o?["_vec"]?[2]?.asDouble)
         XCTAssertEqual("hello", o?["_vec"]?[3]?.asString)
     }
     
@@ -73,25 +73,25 @@ class JsonToFlexConverterTest: XCTestCase {
     func testJSONArrayOfFloats() {
         let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, 0.55555, 0.76543, 1e-2, 1.222e+2, 1.222E-2]".data(using: .utf8)!)
         let o = data.root
-        XCTAssertEqual(0.1, o![0]?.asFloat!)
+        XCTAssertEqual(0.1, o![0]?.asDouble!)
         XCTAssertEqual(0.25, o![1]?.asFloat!)
         XCTAssertEqual(0.75, o![2]?.asFloat!)
-        XCTAssertEqual(0.55555, o![3]?.asFloat!)
-        XCTAssertEqual(0.76543, o![4]?.asFloat!)
-        XCTAssertEqual(0.01, o![5]?.asFloat)
-        XCTAssertEqual(122.2, o![6]?.asFloat)
-        XCTAssertEqual(0.01222, o![7]?.asFloat)
+        XCTAssertEqual(0.55555, o![3]?.asDouble!)
+        XCTAssertEqual(0.76543, o![4]?.asDouble!)
+        XCTAssertEqual(0.01, o![5]?.asDouble)
+        XCTAssertEqual(122.2, o![6]?.asDouble)
+        XCTAssertEqual(0.01222, o![7]?.asDouble)
     }
     
     func testJSONArrayOfFloatsAndNull() {
         let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, null, 0.55555, 0.76543]".data(using: .utf8)!)
         let o = data.root
-        XCTAssertEqual(0.1, o![0]?.asFloat!)
+        XCTAssertEqual(0.1, o![0]?.asDouble!)
         XCTAssertEqual(0.25, o![1]?.asFloat!)
         XCTAssertEqual(0.75, o![2]?.asFloat!)
         XCTAssertEqual(true, o![3]!.isNull)
-        XCTAssertEqual(0.55555, o![4]?.asFloat!)
-        XCTAssertEqual(0.76543, o![5]?.asFloat!)
+        XCTAssertEqual(0.55555, o![4]?.asDouble!)
+        XCTAssertEqual(0.76543, o![5]?.asDouble!)
     }
     
     func testJSONArrayBools() {
@@ -105,18 +105,18 @@ class JsonToFlexConverterTest: XCTestCase {
     func testJSONArrayOfFloatsAndTrue() {
         let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, true, 0.55555, 0.76543]".data(using: .utf8)!)
         let o = data.root
-        XCTAssertEqual(0.1, o![0]?.asFloat)
+        XCTAssertEqual(0.1, o![0]?.asDouble)
         XCTAssertEqual(0.25, o![1]?.asFloat)
         XCTAssertEqual(0.75, o![2]?.asFloat)
         XCTAssertEqual(true, o![3]!.asBool)
-        XCTAssertEqual(0.55555, o![4]?.asFloat)
-        XCTAssertEqual(0.76543, o![5]?.asFloat)
+        XCTAssertEqual(0.55555, o![4]?.asDouble)
+        XCTAssertEqual(0.76543, o![5]?.asDouble)
     }
     
     func testJSONArrayOfFloatsWhereOneNumberIsNotValid() {
         let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 025]".data(using: .utf8)!)
         let o = data.root
-        XCTAssertEqual(0.1, o![0]?.asFloat!)
+        XCTAssertEqual(0.1, o![0]?.asDouble!)
         XCTAssertEqual("025", o![1]?.asString!)
     }
     
@@ -124,12 +124,12 @@ class JsonToFlexConverterTest: XCTestCase {
         let data = try!FlexBuffer.dataFrom(jsonData:"[0.1, 0.25, 0.75, false, 0.55555, -0.76543]".data(using: .utf8)!)
         let o = data.root
         print(o!.debugDescription)
-        XCTAssertEqual(0.1, o![0]?.asFloat)
+        XCTAssertEqual(0.1, o![0]?.asDouble)
         XCTAssertEqual(0.25, o![1]?.asFloat)
         XCTAssertEqual(0.75, o![2]?.asFloat)
         XCTAssertEqual(false, o![3]!.asBool)
-        XCTAssertEqual(0.55555, o![4]?.asFloat)
-        XCTAssertEqual(-0.76543, o![5]?.asFloat)
+        XCTAssertEqual(0.55555, o![4]?.asDouble)
+        XCTAssertEqual(-0.76543, o![5]?.asDouble)
     }
     
     func testJSONSample(){

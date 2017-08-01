@@ -194,4 +194,17 @@ class FlexBufferRoundtripTest: XCTestCase {
         XCTAssertEqual(flx1?.jsonString, "\"hello \\t \\\" there \\/ \\n\\r\"")
         print(flx1!.debugDescription)
     }
+    
+    func testToDictMethod() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            flx.add(key: "bla", value: true)
+        }
+        let flxData = try?flx.finish()
+        let flx1 = FlexBuffer.decode(data: flxData!)
+        let dict = flx1?.asMap?.toDict{
+            return $0.asBool
+        }
+        XCTAssertEqual(["bla": true], dict!)
+    }
 }
