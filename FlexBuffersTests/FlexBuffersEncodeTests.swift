@@ -416,7 +416,7 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func expect(_ v : Any, _ data : [UInt8]){
-        let _data = try!FlexBuffer.encodeInefficientButConvenient(v)
+        let _data = try!FlexBuffer.encodeInefficient(v)
         // then
         XCTAssertEqual([UInt8](_data), data)
     }

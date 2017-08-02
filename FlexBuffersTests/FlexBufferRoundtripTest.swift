@@ -85,94 +85,6 @@ class FlexBufferRoundtripTest: XCTestCase {
         XCTAssertEqual(v["address"]?.asMap?["countryCode"]?.asString, "XX")
     }
     
-    func test3(){
-        let data = try!FlexBuffer.encodeInefficientButConvenient([
-            "age" : 35,
-            "flags" : [true, false, true, true],
-            "weight" : 72.5,
-            "address" : [
-                "city" : "Bla",
-                "zip" : "12345",
-                "countryCode" : "XX"
-            ]
-        ])
-        let v = FlexBuffer.decode(data: data)!.asMap!
-        XCTAssertEqual(v.count, 4)
-        XCTAssertEqual(v["age"]?.asInt, 35)
-        XCTAssertEqual(v["flags"]?.asVector?.count, 4)
-        XCTAssertEqual(v["flags"]?.asVector?[0]?.asBool, true)
-        XCTAssertEqual(v["flags"]?.asVector?[1]?.asBool, false)
-        XCTAssertEqual(v["flags"]?.asVector?[2]?.asBool, true)
-        XCTAssertEqual(v["flags"]?.asVector?[3]?.asBool, true)
-        XCTAssertEqual(v["weight"]?.asFloat, 72.5)
-        XCTAssertEqual(v["address"]?.asMap?.count, 3)
-        XCTAssertEqual(v["address"]?.asMap?["city"]?.asString, "Bla")
-        XCTAssertEqual(v["address"]?.asMap?["zip"]?.asString, "12345")
-        XCTAssertEqual(v["address"]?.asMap?["countryCode"]?.asString, "XX")
-    }
-    
-    
-    func test4(){
-        let data = try!FlexBuffer.encodeInefficientButConvenient([
-            "location" : "http://google.com/flatbuffers/",
-            "initialized" : true,
-            "fruit" : 2,
-            "list" : [
-                [
-                    "sibling" : [
-                        "parent" : [
-                            "id" : 0xABADCAFE + UInt64(0),
-                            "count" : 10000 + 0,
-                            "prefix" : 64 + 0,
-                            "length" : UInt32(1000000 + 0)
-                        ],
-                        "time" : 123456 + 0,
-                        "ratio" : 3.14159 + Float(0),
-                        "rating" : 3.1415432432445543543+Double(0),
-                        "postfix" : UInt8(33 + 0)
-                    ]
-                ],
-                [
-                    "sibling" : [
-                        "parent" : [
-                            "id" : 0xABADCAFE + UInt64(1),
-                            "count" : 10000 + 1,
-                            "prefix" : 64 + 1,
-                            "length" : UInt32(1000000 + 1)
-                        ],
-                        "time" : 123456 + 1,
-                        "ratio" : 3.14159 + Float(1),
-                        "rating" : 3.1415432432445543543+Double(1),
-                        "postfix" : UInt8(33 + 1)
-                    ]
-                ],
-                [
-                    "sibling" : [
-                        "parent" : [
-                            "id" : 0xABADCAFE + UInt64(2),
-                            "count" : 10000 + 2,
-                            "prefix" : 64 + 2,
-                            "length" : UInt32(1000000 + 2)
-                        ],
-                        "time" : 123456 + 2,
-                        "ratio" : 3.14159 + Float(2),
-                        "rating" : 3.1415432432445543543+Double(2),
-                        "postfix" : UInt8(33 + 2)
-                    ]
-                ]
-            ],
-
-            ])
-        let v = FlexBuffer.decode(data: data)!.asMap!
-        XCTAssertEqual(v.count, 4)
-        XCTAssertEqual(v["fruit"]?.asInt, 2)
-        XCTAssertEqual(v["initialized"]?.asBool, true)
-        XCTAssertEqual(v["location"]?.asString, "http://google.com/flatbuffers/")
-        XCTAssertEqual(v["list"]?.asVector?.count, 3)
-        XCTAssertEqual(v["list"]?[1]?["sibling"]?["parent"]?["prefix"]?.asInt, 65)
-        XCTAssertEqual(v["list"]?.count, 3)
-    }
-    
     func testTransformVectorToArray(){
         let flx = FlexBuffer()
         try?flx.add(array: [true, true , false, true])
@@ -206,5 +118,47 @@ class FlexBufferRoundtripTest: XCTestCase {
             return $0.asBool
         }
         XCTAssertEqual(["bla": true], dict!)
+    }
+    
+    func testFlxbValues() {
+        let object = [
+            "i": 25,
+            "b": true,
+            "s": "Hello",
+            "ss": "My name is" as StaticString,
+            "d": 2.5,
+            "u": 45 as UInt,
+            "bs": [true, false , true] as FlxbValueVector,
+            "bss": [1, 3.4, "abc", FlxbValueNil(), 45] as FlxbValueVector,
+            "o": ["a": 12] as FlxbValueMap,
+            "vo" : [ ["a": 1]as FlxbValueMap, [1, 2, 3] as FlxbValueVector] as FlxbValueVector
+        ] as FlxbValueMap
+        let data = try!FlexBuffer.encode(object)
+        XCTAssertEqual(data.root?.count, 10)
+        XCTAssertEqual(data.root?["i"]?.asInt, 25)
+        XCTAssertEqual(data.root?["b"]?.asBool, true)
+        XCTAssertEqual(data.root?["s"]?.asString, "Hello")
+        XCTAssertEqual(data.root?["ss"]?.asString, "My name is")
+        XCTAssertEqual(data.root?["d"]?.asDouble, 2.5)
+        XCTAssertEqual(data.root?["u"]?.asUInt, 45)
+        XCTAssertEqual(data.root?["bs"]?.count, 3)
+        XCTAssertEqual(data.root?["bs"]?[0]?.asBool, true)
+        XCTAssertEqual(data.root?["bs"]?[1]?.asBool, false)
+        XCTAssertEqual(data.root?["bs"]?[2]?.asBool, true)
+        XCTAssertEqual(data.root?["bss"]?.asVector?.count, 5)
+        XCTAssertEqual(data.root?["bss"]?[0]?.asInt, 1)
+        XCTAssertEqual(data.root?["bss"]?[1]?.asDouble, 3.4)
+        XCTAssertEqual(data.root?["bss"]?[2]?.asString, "abc")
+        XCTAssertEqual(data.root?["bss"]?[3]?.isNull, true)
+        XCTAssertEqual(data.root?["bss"]?[4]?.asInt, 45)
+        XCTAssertEqual(data.root?["o"]?.count, 1)
+        XCTAssertEqual(data.root?["o"]?["a"]?.asInt, 12)
+        XCTAssertEqual(data.root?["vo"]?.count, 2)
+        XCTAssertEqual(data.root?["vo"]?[0]?.count, 1)
+        XCTAssertEqual(data.root?["vo"]?[0]?["a"]?.asInt, 1)
+        XCTAssertEqual(data.root?["vo"]?[1]?.count, 3)
+        XCTAssertEqual(data.root?["vo"]?[1]?[0]?.asInt, 1)
+        XCTAssertEqual(data.root?["vo"]?[1]?[1]?.asInt, 2)
+        XCTAssertEqual(data.root?["vo"]?[1]?[2]?.asInt, 3)
     }
 }

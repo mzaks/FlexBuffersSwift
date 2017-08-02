@@ -62,64 +62,70 @@ func createContainer(flx : FlexBuffer) throws -> Data {
     return try!flx.finish()
 }
 
+let parent0 = [
+    "id" : 0xABADCAFE + 0,
+    "count" : 10000 + 0,
+    "prefix" : 64 + 0,
+    "length" : 1000000 + 0
+    ] as FlxbValueMap
+let parent1 = [
+    "id" : 0xABADCAFE + 1,
+    "count" : 10000 + 1,
+    "prefix" : 64 + 1,
+    "length" : 1000000 + 1
+    ] as FlxbValueMap
+let parent2 = [
+    "id" : 0xABADCAFE + 2,
+    "count" : 10000 + 2,
+    "prefix" : 64 + 2,
+    "length" : 1000000 + 2
+    ] as FlxbValueMap
+
+let sibling0  = [
+    "parent" : parent0,
+    "time" : 123456 + 0,
+    "ratio" : 3.14159 + 0,
+    "size" : 10000 + 0
+    ] as FlxbValueMap
+let sibling1  = [
+    "parent" : parent1,
+    "time" : 123456 + 1,
+    "ratio" : 3.14159 + 1,
+    "size" : 10000 + 1
+    ] as FlxbValueMap
+let sibling2  = [
+    "parent" : parent2,
+    "time" : 123456 + 2,
+    "ratio" : 3.14159 + 2,
+    "size" : 10000 + 2
+    ] as FlxbValueMap
+let listItem0 = [
+        "sibling": sibling0,
+        "name": "Hello, World!" as StaticString,
+        "rating" : 3.1415432432445543543+0,
+        "postfix" : UInt(33 + 0)
+    ] as FlxbValueMap
+let listItem1 = [
+    "sibling": sibling1,
+    "name": "Hello, World!" as StaticString,
+    "rating" : 3.1415432432445543543+1,
+    "postfix" : UInt(33 + 1)
+    ] as FlxbValueMap
+let listItem2 = [
+    "sibling": sibling2,
+    "name": "Hello, World!" as StaticString,
+    "rating" : 3.1415432432445543543+2,
+    "postfix" : UInt(33 + 2)
+    ] as FlxbValueMap
 let object = [
-    "list" : [
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(0),
-                    "count" : 10000 + 0,
-                    "prefix" : 64 + 0,
-                    "length" : UInt32(1000000 + 0)
-                ],
-                "time" : 123456 + 0,
-                "ratio" : 3.14159 + Float(0),
-                "size" : UInt16(10000 + 0)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(0),
-            "postfix" : UInt8(33 + 0)
-        ],
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(1),
-                    "count" : 10000 + 1,
-                    "prefix" : 64 + 1,
-                    "length" : UInt32(1000000 + 1)
-                ],
-                "time" : 123456 + 1,
-                "ratio" : 3.14159 + Float(1),
-                "size" : UInt16(10000 + 1)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(1),
-            "postfix" : UInt8(33 + 1)
-        ],
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(2),
-                    "count" : 10000 + 2,
-                    "prefix" : 64 + 2,
-                    "length" : UInt32(1000000 + 2)
-                ],
-                "time" : 123456 + 2,
-                "ratio" : 3.14159 + Float(2),
-                "size" : UInt16(10000 + 2)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(2),
-            "postfix" : UInt8(33 + 2)
-        ]
-    ],
-    "location" : "http://google.com/flatbuffers/",
+    "list": [listItem0, listItem1, listItem2] as FlxbValueVector,
+    "location" : "http://google.com/flatbuffers/" as StaticString,
     "initialized" : true,
     "fruit" : 2
-] as [String : Any]
+    ] as FlxbValueMap
 
 func create() -> Data {
-    return try!FlexBuffer.encodeInefficientButConvenient(object)
+    return try!FlexBuffer.encode(object).data
 }
 
 let object2 = [
@@ -272,7 +278,7 @@ private func use1(_ data : Data, start : Int) -> Int
     for i in 0..<list.count {
         let foobar = list[i]!.asMap!
         sum = sum &+ foobar["name"]!.asString!.utf8.count
-        sum = sum &+ Int(foobar["postfix"]!.asInt!)
+        sum = sum &+ Int(foobar["postfix"]!.asUInt!)
         sum = sum &+ Int(foobar["rating"]!.asDouble!)
         
         let bar = foobar["sibling"]!.asMap!
@@ -482,7 +488,7 @@ for i in 0 ..< NumberOfEncodings {
 }
 let data1 = datas1[0]!
 d = CFAbsoluteTimeGetCurrent() - t
-print("Inefficient FlexBuffers encoding (x\(NumberOfEncodings)):")
+print("Convinient FlexBuffers encoding (x\(NumberOfEncodings)):")
 print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
@@ -564,7 +570,7 @@ for i in 0 ..< NumberOfDecodings {
     sum1 += use1(data1, start: i)
 }
 d = CFAbsoluteTimeGetCurrent() - t
-print("Decoding (x\(NumberOfDecodings)) result of inefficient FlexBuffers encoding:")
+print("Decoding (x\(NumberOfDecodings)) result of convinient FlexBuffers encoding:")
 print("\(sum1) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!

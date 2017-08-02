@@ -652,7 +652,7 @@ public class FlexBuffer {
 }
 
 extension FlexBuffer {
-    public static func encodeInefficientButConvenient(_ v: Any) throws -> Data {
+    public static func encodeInefficient(_ v: Any) throws -> Data {
         let builder = FlexBuffer()
         try builder.handleValue(v)
         return try builder.finish()
@@ -707,6 +707,79 @@ extension FlexBuffer {
             throw FlexBufferEncodeError(message: "Unexpected FlxValue type added \(type(of: v))")
         }
         
+    }
+    
+    public static func encode(_ v: FlxbValue) throws -> FlxbData {
+        let builder = FlexBuffer()
+        try builder.handleValue(v)
+        let flxbData = try builder.finish()
+        return FlxbData(data: flxbData)
+    }
+    
+    fileprivate func handleValue(_ v: FlxbValue) throws {
+        if let i = v as? Int {
+            int(i)
+        } else if let u = v as? UInt {
+            uint(u)
+        } else if let b = v as? Bool {
+            bool(b)
+        } else if let d = v as? Double {
+            double(d)
+        } else if let s = v as? StaticString {
+            string(s)
+        } else if let s = v as? String {
+            string(s)
+        } else if let m = v as? FlxbValueMap {
+            try addValueMap(m)
+        } else if let v = v as? FlxbValueVector {
+            try addValueVector(v)
+        } else if let _ = v as? FlxbValueNil {
+            addNull()
+        } else {
+            throw FlexBufferEncodeError(message: "Unexpected FlxbValue type added \(type(of: v))")
+        }
+    }
+    fileprivate func addValueVector(_ array : FlxbValueVector) throws {
+        let start = startVector()
+        for v in array.values {
+            try handleValue(v)
+        }
+        _ = try endVector(start: start, typed: false, fixed: false)
+    }
+    
+    fileprivate func addValueMap(_ dict : FlxbValueMap) throws {
+        let start = startMap()
+        for v in dict.values {
+            self.key(v.0)
+            try handleValue(v.1)
+        }
+        try endMap(start: start)
+    }
+}
+
+public protocol FlxbValue {}
+extension Int: FlxbValue {}
+extension UInt: FlxbValue {}
+extension Bool: FlxbValue {}
+extension Double: FlxbValue {}
+extension StaticString: FlxbValue {}
+extension String: FlxbValue {}
+
+public struct FlxbValueNil: FlxbValue {
+    public init(){}
+}
+
+public struct FlxbValueVector: FlxbValue, ExpressibleByArrayLiteral {
+    let values: [FlxbValue]
+    public init(arrayLiteral elements: FlxbValue...) {
+        values = elements
+    }
+}
+
+public struct FlxbValueMap: FlxbValue, ExpressibleByDictionaryLiteral {
+    let values: [(StaticString, FlxbValue)]
+    public init(dictionaryLiteral elements: (StaticString, FlxbValue)...) {
+        values = elements
     }
 }
 

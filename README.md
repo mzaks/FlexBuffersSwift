@@ -31,18 +31,18 @@ let map = try!FlexBuffer.decode(data: data)!.asMap!
 print(map.debugDescription)
 ```
 
-There is also an API for convinient encoding, which is however inefficient
+There is also an API for convinient encoding:
 ```swift
-let data = try!FlexBuffer.encodeInefficientButConvenient([
+let flxbData = try!FlexBuffer.encode([
     "age" : 35,
-    "flags" : [true, false, true, true],
+    "flags" : [true, false, true, true] as FlxbValueVector,
     "weight" : 72.5,
     "address" : [
         "city" : "Bla",
         "zip" : "12345",
         "countryCode" : "XX"
-    ]
-])
+    ] as FlxbValueMap
+] as FlxbValueMap)
 ```
 
 FlexBuffersSwift also incorporates it's own efficient JSON parser which is used to transform JSON to FlexBuffer binary.
@@ -54,9 +54,15 @@ let flxbData = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"ye
 The binary can than be read with no parsing costs in a strong typed way:
 
 ```
-let accessor = flxbData.root
-let name = accessor?["name"]?.asString
-let day = accessor?["birthday"]?["day"]?.asInt
+let root = flxbData.root
+let name = root?["name"]?.asString
+let day = root?["birthday"]?["day"]?.asInt
+```
+
+Or you can turn the binary back to JSON string
+
+```
+print(root!.jsonString)
 ```
 
 # Performance
@@ -70,47 +76,48 @@ Results on MBP Retina 2015
 
 ```
 Efficient FlexBuffers encoding (x100000):
-676 bytes in 0.951330006122589 106.324 MB
+676 bytes in 0.974463999271393 106.312 MB
 -
-Inefficient FlexBuffers encoding (x100000):
-938 bytes in 12.0113599896431 297.566 MB
+Efficient FlexBuffers encoding to JSON string (x100000):
+654 bytes in 2.22512096166611 27.9219 MB
+-
+Convinient FlexBuffers encoding (x100000):
+1010 bytes in 1.60217899084091 105.129 MB
 -
 JSON encoding (x100000):
-657 bytes in 7.28703099489212 443.969 MB
+657 bytes in 6.67863005399704 444.391 MB
 -
 FlatBuffers encoding (x100000):
-352 bytes in 0.466732025146484 84.4922 MB
+352 bytes in 0.441623032093048 84.5078 MB
 -
 FlatBuffers encoding without data duplication (x100000):
-304 bytes in 0.602275967597961 75.4727 MB
+304 bytes in 0.54592502117157 75.3828 MB
 -
 FlexBuffers encoding from JSON string (x100000):
-704 bytes in 2.00572603940964 156.914 MB
+704 bytes in 1.80597501993179 79.0039 MB
 -------------
 Decoding (x100000) result of efficient FlexBuffers encoding:
-864436166550000 in 0.287814974784851 0.00390625 MB
+864436166550000 in 0.270677983760834 0.0 MB
 -
 Decoding (x100000) result of efficient FlexBuffers encoding and using access chaining:
-864436166550000 in 0.507194995880127 0.0078125 MB
+864436166550000 in 0.469451010227203 0.0078125 MB
 -
-Decoding (x100000) result of inefficient FlexBuffers encoding:
-864436166550000 in 0.293328046798706 0.00390625 MB
+Decoding (x100000) result of convinient FlexBuffers encoding:
+864436166550000 in 0.268750011920929 0.00390625 MB
 -
 Decoding (x100000) JSON:
-864436166550000 in 3.99850696325302 169.41 MB
+864436166550000 in 3.85789197683334 163.832 MB
 -
 Decoding (x100000) FlatBuffers:
-864436166550000 in 0.0176529884338379 0.00390625 MB
+864436166550000 in 0.017283022403717 0.0078125 MB
 -
 Decoding FlexBuffers created from JSON string (x100000):
-864436166550000 in 0.301981985569 0.0078125 MB
+864436166550000 in 0.271202027797699 0.0078125 MB
 -
 Decoding JSON by encoding it to FlexBuffers and than using it (x100000):
-864436166550000 in 2.30986094474792 201.031 MB
+864436166550000 in 2.09489101171494 1.49609 MB
 -
 Decoding unsorted JSON by encoding it to FlexBuffers and than using it (x100000):
-864436166550000 in 2.36321097612381 203.129 MB
+864436166550000 in 2.1292319893837 1.55469 MB
 -
 ```
-![](docs/benchmark01.png)
-![](docs/benchmark02.png)
