@@ -1351,9 +1351,6 @@ public struct FlxbReference : CustomDebugStringConvertible {
     }
     
     public var debugDescription: String {
-        if let v = asBool {
-            return "\(v ? "true" : "false")"
-        }
         if let v = asInt {
             return "\(v)"
         }
