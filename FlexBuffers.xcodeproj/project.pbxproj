@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		0B0415CD1E2A721100B376C7 /* FlexBufferRoundtripTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0415CC1E2A721100B376C7 /* FlexBufferRoundtripTest.swift */; };
+		0B0A1AC81F39C9EE00D242AE /* escaping.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B0A1AC71F39C9EE00D242AE /* escaping.json */; };
 		0B1BF9991EE16E75005F654F /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
 		0B1BF99C1EE16E75005F654F /* FlexBuffers.h in Headers */ = {isa = PBXBuildFile; fileRef = 0BB1BE681E1271E900A9041B /* FlexBuffers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		0B2092381E9194FA00EF3AF5 /* flatBuffersBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */; };
 		0B20923C1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */; };
 		0B2092401E992FDE00EF3AF5 /* giphy_trending.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */; };
-		0B2A86661F2F354E009F6849 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 0B2A86651F2F354E009F6849 /* README.md */; };
 		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
 		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
 		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
@@ -47,6 +47,7 @@
 
 /* Begin PBXFileReference section */
 		0B0415CC1E2A721100B376C7 /* FlexBufferRoundtripTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferRoundtripTest.swift; sourceTree = "<group>"; };
+		0B0A1AC71F39C9EE00D242AE /* escaping.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = escaping.json; sourceTree = "<group>"; };
 		0B1BF9A11EE16E75005F654F /* FlexBuffersiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = FlexBuffersiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B1BF9A21EE16E75005F654F /* FlexBuffers copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "FlexBuffers copy-Info.plist"; path = "/Users/mzaks/dev/FlexBuffers/FlexBuffers copy-Info.plist"; sourceTree = "<absolute>"; };
 		0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = flatBuffersBench.swift; sourceTree = "<group>"; };
@@ -149,6 +150,7 @@
 				0BB1BE751E1271E900A9041B /* Info.plist */,
 				0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */,
 				0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */,
+				0B0A1AC71F39C9EE00D242AE /* escaping.json */,
 			);
 			path = FlexBuffersTests;
 			sourceTree = "<group>";
@@ -317,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B2092401E992FDE00EF3AF5 /* giphy_trending.json in Resources */,
+				0B0A1AC81F39C9EE00D242AE /* escaping.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,7 +348,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B2A86661F2F354E009F6849 /* README.md in Sources */,
 				0BB1BE801E12720400A9041B /* FlexBuffers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

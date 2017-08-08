@@ -49,13 +49,19 @@ class JsonToFlexConverterTest: XCTestCase {
     func testJSONObjectOnePropertyToStringWithEscaping() {
         let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdl\\\"\\n\\r\\{}[]:,  tfkjw23424\"}".data(using: .utf8)!)
         let o = data.root
-        XCTAssertEqual("slkfjsdl\\\"\\n\\r\\{}[]:,  tfkjw23424", o!["name"]?.asString!)
+        XCTAssertEqual("slkfjsdl\"\\n\\r\\{}[]:,  tfkjw23424", o!["name"]?.asString!)
     }
     
     func testJSONObjectOnePropertyToStringWithEmoji() {
         let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"slkfjsdlfkjw23424😒😒🤓😎\"}".data(using: .utf8)!)
         let o = data.root
         XCTAssertEqual("slkfjsdlfkjw23424😒😒🤓😎", o!["name"]?.asString!)
+    }
+    
+    func testJSONObjectOnePropertyToStringWithBizzareChars() {
+        let data = try!FlexBuffer.dataFrom(jsonData:"{name:\"𝔐ŽТ◲я┢Ԣшедℳлѽ\"}".data(using: .utf8)!)
+        let o = data.root
+        XCTAssertEqual("𝔐ŽТ◲я┢Ԣшедℳлѽ", o!["name"]?.asString!)
     }
     
     func testJSONArrayOfIntegers() {
@@ -171,5 +177,16 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual(25, c1)
         XCTAssertEqual("1276846", s1)
         XCTAssertEqual("http://media3.giphy.com/media/qc1waqAag4tZC/giphy.gif", o_u1)
+    }
+    
+    func testEscapingJson() {
+        let url = Bundle.init(for: JsonToFlexConverterTest.self).url(forResource: "escaping", withExtension: "json")!
+        let jsonData = try!Data(contentsOf: url)
+        
+        let data = try!FlexBuffer.dataFrom(jsonData: jsonData, initialSize: jsonData.count, options: [.shareKeysAndStrings], forceNumberParsing: true)
+        XCTAssertEqual("Hello \"friend\"", data.root?["case1"]?.asString)
+        XCTAssertEqual("Hello \\\"friend\\\"", data.root?["case2"]?.asString)
+        XCTAssertEqual("Hello Тfriend", data.root?["case3"]?.asString)
+        XCTAssertEqual("Hello ∢friend", data.root?["case4"]?.asString)
     }
 }

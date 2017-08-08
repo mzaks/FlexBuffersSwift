@@ -1,0 +1,6 @@
+{
+    "case1": "Hello \"friend\"",
+    "case2": "Hello \\\"friend\\\"",
+    "case3": "Hello Тfriend",
+    "case4": "Hello ∢friend",
+}

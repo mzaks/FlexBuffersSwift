@@ -1960,9 +1960,16 @@ extension FlexBuffer {
                 let c = bytes.advanced(by: i)
                 switch c.pointee {
                 case 92: // \
-                    if quoteMode && c.advanced(by: 1).pointee == 47 { // handling \/ case
-                        break
-                    }else{
+                    if quoteMode {
+                        if c.advanced(by: 1).pointee == 92 // handling \\ case
+                        || c.advanced(by: 1).pointee == 47 // handling \/ case 
+                        || c.advanced(by: 1).pointee == 34 { // handling \" case
+                            i += 1
+                            tokenPointerCurrent = addToToken(value: c.advanced(by: 1).pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                        } else {
+                            fallthrough
+                        }
+                    } else {
                         fallthrough
                     }
                 case 123: //{
@@ -2035,12 +2042,8 @@ extension FlexBuffer {
                         tokenIsQuoted = false
                     }
                 case 34://"
-                    if quoteMode && c.predecessor().pointee == 92 { // \"
-                        tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
-                    } else {
                         quoteMode = quoteMode != true
                         tokenIsQuoted = tokenIsQuoted || quoteMode
-                    }
                 case 44://,
                     if quoteMode {
                         tokenPointerCurrent = addToToken(value: c.pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
