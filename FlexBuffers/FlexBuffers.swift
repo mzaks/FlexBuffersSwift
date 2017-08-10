@@ -119,11 +119,13 @@ public class FlexBuffer {
         let value : Container
         let type : Type
         let minBitWidth : BitWidth
+        
         init() {
             value = Value.Container.int(0)
             type = .null
             minBitWidth = .width8
         }
+        
         init(value : Int64, type : Type, bitWidth : BitWidth) {
             self.value = Value.Container.int(value)
             self.type = type
@@ -146,6 +148,12 @@ public class FlexBuffer {
             self.value = Value.Container.double(value)
             self.type = .float
             minBitWidth = BitWidth.width(double: value)
+        }
+        
+        init(value : Bool) {
+            self.value = Value.Container.uint(value ? 1 : 0)
+            self.type = .bool
+            minBitWidth = BitWidth.width8
         }
         
         func storedWidth(bitWidth : BitWidth = .width8) -> BitWidth {
@@ -205,7 +213,7 @@ public class FlexBuffer {
     }
     
     fileprivate func bool(_ b : Bool) {
-        b ? int(1) : int(0)
+        stack.append(Value(value: b))
     }
     
     fileprivate func string(_ s : String) {
@@ -449,6 +457,8 @@ public class FlexBuffer {
         case .int:
             write(value: flxvalue.value.asInt, size: width)
         case .uint:
+            write(value: flxvalue.value.asUInt, size: width)
+        case .bool:
             write(value: flxvalue.value.asUInt, size: width)
         case .float:
             try writeDouble(value: flxvalue.value.asDouble, size: width)
@@ -1256,6 +1266,24 @@ public struct FlxbReference : CustomDebugStringConvertible {
     
     public var asBool : Bool? {
         switch type {
+        case .bool :
+            let r = readUInt(pointer: dataPointer, width: parentWidth)
+            if r == 0 {
+                return false
+            }
+            if r == 1 {
+                return true
+            }
+            return nil
+        case .uint :
+            let r = readUInt(pointer: dataPointer, width: parentWidth)
+            if r == 0 {
+                return false
+            }
+            if r == 1 {
+                return true
+            }
+            return nil
         case .int :
             let r = readInt(pointer: dataPointer, width: parentWidth)
             if r == 0 {
@@ -1362,6 +1390,9 @@ public struct FlxbReference : CustomDebugStringConvertible {
         }
         if let v = asDouble {
             return "\(v)"
+        }
+        if let v = asBool {
+            return v ? "true" : "false"
         }
         if let v = asString {
             let escaped_v = v.replacingOccurrences(of: "\"", with: "\\\"")
@@ -1738,21 +1769,24 @@ fileprivate enum Type : UInt8 {
     vector_int2, vector_uint2, vector_float2,
     vector_int3, vector_uint3, vector_float3,
     vector_int4, vector_uint4, vector_float4,
-    blob
+    blob, bool
     
     var isInline : Bool {
-        return self.rawValue <= Type.float.rawValue
+        return self == .bool || self.rawValue <= Type.float.rawValue
     }
     
     var isTypedVectorElement : Bool {
-        return self.rawValue >= Type.int.rawValue && self.rawValue <= Type.string.rawValue
+        return self == .bool || (self.rawValue >= Type.int.rawValue && self.rawValue <= Type.string.rawValue)
     }
     
     var isTypedVector : Bool {
-        return self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_string.rawValue
+        return self == .bool || (self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_string.rawValue)
     }
     
     func toTypedVector(length : UInt8 = 0) throws -> Type {
+        if self == .bool {
+            return .vector_uint
+        }
         switch length {
         case 0:
             return Type(rawValue: self.rawValue - Type.int.rawValue + Type.vector_int.rawValue) ?? Type.null
