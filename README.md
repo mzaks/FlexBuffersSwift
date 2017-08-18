@@ -1,5 +1,5 @@
 # FlexBuffersSwift
-[![Build Status](https://travis-ci.org/mzaks/FlexBuffersSwift.svg?branch=master)](https://travis-ci.org/mzaks/FlexBuffersSwift)[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Build Status](https://travis-ci.org/mzaks/FlexBuffersSwift.svg?branch=master)](https://travis-ci.org/mzaks/FlexBuffersSwift)[![codecov](https://codecov.io/gh/mzaks/FlexBuffersSwift/branch/master/graph/badge.svg)](https://codecov.io/gh/mzaks/FlexBuffersSwift)[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 Swift implementation of FlexBuffers - a sub project of Googles FlatBuffers project [https://google.github.io/flatbuffers/].
 FlexBuffers is a self suficient binary data representation which can encode numbers, strings, maps and vectors.
