@@ -188,5 +188,7 @@ class JsonToFlexConverterTest: XCTestCase {
         XCTAssertEqual("Hello \\\"friend\\\"", data.root?["case2"]?.asString)
         XCTAssertEqual("Hello Тfriend", data.root?["case3"]?.asString)
         XCTAssertEqual("Hello ∢friend", data.root?["case4"]?.asString)
+        XCTAssertEqual("Café", data.root?["case5"]?.asString)
+        XCTAssertEqual("Café", data.root?["case6"]?.asString)
     }
 }

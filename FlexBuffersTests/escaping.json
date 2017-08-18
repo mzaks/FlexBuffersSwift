@@ -3,4 +3,6 @@
     "case2": "Hello \\\"friend\\\"",
     "case3": "Hello Тfriend",
     "case4": "Hello ∢friend",
+    "case5": "Café",
+    "case6": "Caf\u00e9"
 }

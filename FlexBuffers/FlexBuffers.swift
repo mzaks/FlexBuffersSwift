@@ -1988,6 +1988,14 @@ extension FlexBuffer {
             
         }
         
+        func convertHexToNumber(_ c : UInt8) -> Int {
+            if c >= 48 && c<=57 {
+                return Int(c) - 48
+            } else {
+                return  Int(c) - 97 + 10
+            }
+        }
+        
         try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
             var i : Int = 0
             while i<data.count {
@@ -2000,6 +2008,19 @@ extension FlexBuffer {
                         || c.advanced(by: 1).pointee == 34 { // handling \" case
                             i += 1
                             tokenPointerCurrent = addToToken(value: c.advanced(by: 1).pointee, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                        } else if c.advanced(by: 1).pointee == 117 && data.count > i + 5 { // handling \u case + four-hex-digits
+                            let n = convertHexToNumber(c.advanced(by: 5).pointee) +
+                                    (convertHexToNumber(c.advanced(by: 4).pointee) * 16) +
+                                    (convertHexToNumber(c.advanced(by: 3).pointee) * 256) +
+                                    (convertHexToNumber(c.advanced(by: 2).pointee) * 4096)
+                            if let unicodeScalar = UnicodeScalar(n) {
+                                UTF8.encode(unicodeScalar, into: { (c) in
+                                    tokenPointerCurrent = addToToken(value: c, tokenPointerCurrent: tokenPointerCurrent, tokenPointerStart: &tokenPointerStart)
+                                })
+                                i += 5
+                            } else {
+                                fallthrough
+                            }
                         } else {
                             fallthrough
                         }
