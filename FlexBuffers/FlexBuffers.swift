@@ -18,7 +18,7 @@ public class FlexBuffer {
     var finished = false
     var buffer : UnsafeMutableRawPointer
     var offset : Int
-    private var stack : [Value] = []
+    fileprivate var stack : [Value] = []
     var keyPool : [String:Int] = [:]
     var stringPool : [String:Int] = [:]
     
@@ -407,7 +407,7 @@ public class FlexBuffer {
         stack.append(Value(value: UInt64(iloc), type: type, bitWidth: bitWidth))
     }
     
-    private func align(width : BitWidth) -> UInt8 {
+    fileprivate func align(width : BitWidth) -> UInt8 {
         let byteWidth = 1 << width.rawValue
         offset += paddingSize(bufSize: offset, scalarSize: byteWidth)
         return byteWidth
@@ -662,62 +662,6 @@ public class FlexBuffer {
 }
 
 extension FlexBuffer {
-    public static func encodeInefficient(_ v: Any) throws -> Data {
-        let builder = FlexBuffer()
-        try builder.handleValue(v)
-        return try builder.finish()
-    }
-    
-    fileprivate func addUntypedArray(_ array : NSArray) throws {
-        let start = startVector()
-        for v in array {
-            try handleValue(v)
-        }
-        _ = try endVector(start: start, typed: false, fixed: false)
-    }
-    
-    fileprivate func addUntypedMap(_ dict : NSDictionary) throws {
-        let start = startMap()
-        for v in dict {
-            if let key = v.key as? String {
-                self.key(key)
-            }
-            try handleValue(v.value)
-        }
-        try endMap(start: start)
-    }
-    
-    fileprivate func handleValue(_ v : Any) throws {
-        switch v {
-        case let v as Bool:
-            bool(v)
-        case let v as UnsignedInteger:
-            uint(v.toUIntMax())
-        case let v as SignedInteger:
-            int(v.toIntMax())
-        case let v as UInt:     // because of NSNumber I suppose :(
-            uint(UIntMax(v))
-        case let v as Int:      // because of NSNumber I suppose :(
-            int(IntMax(v))
-        case let v as Float:
-            float(v)
-        case let v as Double:
-            double(v)
-        case let v as String:
-            string(v)
-        case let v as NSNumber:      // because of NSNumber I suppose :(
-            int(IntMax(v))
-        case let v as NSDictionary:
-            try addUntypedMap(v)
-        case let v as NSArray:
-            try addUntypedArray(v)
-        case _ as NSNull:
-            addNull()
-        default:
-            throw FlexBufferEncodeError(message: "Unexpected FlxValue type added \(type(of: v))")
-        }
-        
-    }
     
     public static func encode(_ v: FlxbValue) throws -> FlxbData {
         let builder = FlexBuffer()
@@ -726,7 +670,12 @@ extension FlexBuffer {
         return FlxbData(data: flxbData)
     }
     
+    public static var valueHandler : ((FlexBuffer, FlxbValue) throws -> Bool)?
+    
     fileprivate func handleValue(_ v: FlxbValue) throws {
+        if try FlexBuffer.valueHandler?(self, v) == true {
+            return
+        }
         if let i = v as? Int {
             int(i)
         } else if let u = v as? UInt {
@@ -745,8 +694,14 @@ extension FlexBuffer {
             try addValueVector(v)
         } else if let _ = v as? FlxbValueNil {
             addNull()
+        } else if let p = v as? CGPoint {
+            try add(value: (Double(p.x), Double(p.y)))
+        } else if let s = v as? CGSize {
+            try add(value: (Double(s.width), Double(s.height)))
+        } else if let r = v as? CGRect {
+            try add(value: (Double(r.origin.x), Double(r.origin.y), Double(r.size.width), Double(r.size.height)))
         } else {
-            throw FlexBufferEncodeError(message: "Unexpected FlxbValue type added \(type(of: v))")
+            throw FlexBufferEncodeError(message: "Unexpected FlxbValue type added `\(type(of: v))`. Consider setting your own `FlexBuffer.valueHandler`")
         }
     }
     fileprivate func addValueVector(_ array : FlxbValueVector) throws {
@@ -774,6 +729,9 @@ extension Bool: FlxbValue {}
 extension Double: FlxbValue {}
 extension StaticString: FlxbValue {}
 extension String: FlxbValue {}
+extension CGPoint: FlxbValue {}
+extension CGRect: FlxbValue {}
+extension CGSize: FlxbValue {}
 
 public struct FlxbValueNil: FlxbValue {
     public init(){}
@@ -1126,6 +1084,177 @@ public extension FlexBuffer {
         self.key(key)
         try add(array:vs)
     }
+    
+    public func add(value: Data){
+        let length = value.count
+        let bitWidth = BitWidth.width(uint: UInt64(length))
+        let byteWidth = align(width: bitWidth)
+        write(value: length, size: byteWidth)
+        let sloc = offset
+        
+        _ = value.withUnsafeBytes { (byte: UnsafePointer<UInt8>) -> Bool in
+            for i in 0..<length {
+                write(value: byte.advanced(by: i).pointee, size: 1)
+            }
+            return true
+        }
+        
+        stack.append(Value(value: UInt64(sloc), type: .blob, bitWidth: bitWidth))
+    }
+    public func add(keyString : String, value v : Data) throws {
+        self.key(keyString)
+        add(value:v)
+    }
+    public func add(key : StaticString, value v : Data) throws {
+        self.key(key)
+        add(value:v)
+    }
+    
+// MARK: - TUPPLES
+    
+    public func add(value v : (Int, Int)) throws {
+        let start = startVector()
+        int(v.0)
+        int(v.1)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Int, Int)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Int, Int)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (UInt, UInt)) throws {
+        let start = startVector()
+        uint(v.0)
+        uint(v.1)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (UInt, UInt)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (UInt, UInt)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (Double, Double)) throws {
+        let start = startVector()
+        double(v.0)
+        double(v.1)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Double, Double)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Double, Double)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (Int, Int, Int)) throws {
+        let start = startVector()
+        int(v.0)
+        int(v.1)
+        int(v.2)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Int, Int, Int)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Int, Int, Int)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (UInt, UInt, UInt)) throws {
+        let start = startVector()
+        uint(v.0)
+        uint(v.1)
+        uint(v.2)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (UInt, UInt, UInt)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (UInt, UInt, UInt)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (Double, Double, Double)) throws {
+        let start = startVector()
+        double(v.0)
+        double(v.1)
+        double(v.2)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Double, Double, Double)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Double, Double, Double)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (Int, Int, Int, Int)) throws {
+        let start = startVector()
+        int(v.0)
+        int(v.1)
+        int(v.2)
+        int(v.3)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Int, Int, Int, Int)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Int, Int, Int, Int)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (UInt, UInt, UInt, UInt)) throws {
+        let start = startVector()
+        uint(v.0)
+        uint(v.1)
+        uint(v.2)
+        uint(v.3)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (UInt, UInt, UInt, UInt)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (UInt, UInt, UInt, UInt)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
+    
+    public func add(value v : (Double, Double, Double, Double)) throws {
+        let start = startVector()
+        double(v.0)
+        double(v.1)
+        double(v.2)
+        double(v.3)
+        _ = try endVector(start: start, typed: true, fixed: true)
+    }
+    public func add(keyString : String, value vs : (Double, Double, Double, Double)) throws {
+        self.key(keyString)
+        try add(value:vs)
+    }
+    public func add(key: StaticString, value vs : (Double, Double, Double, Double)) throws {
+        self.key(key)
+        try add(value:vs)
+    }
 }
 
 // MARK: - ACCESSORS
@@ -1351,6 +1480,12 @@ public struct FlxbReference : CustomDebugStringConvertible {
             }
             return nil
         }
+        if type.isFixedTypedVector {
+            if let p = self.indirect {
+                let (type, length) = self.type.fixedTypedVectorElementType
+                return FlxbVector(dataPointer: p, byteWidth: byteWidth, type: type, length: length)
+            }
+        }
         switch type {
         case .vector :
             if let p = self.indirect {
@@ -1372,6 +1507,114 @@ public struct FlxbReference : CustomDebugStringConvertible {
         default:
             return nil
         }
+    }
+    
+    public var asTuppleInt : (Int, Int)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asInt,
+                let v2 = v[1]?.asInt {
+                return (v1, v2)
+            }
+        }
+        return nil
+    }
+    
+    public var asTuppleUInt : (UInt, UInt)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asUInt,
+                let v2 = v[1]?.asUInt {
+                return (v1, v2)
+            }
+        }
+        return nil
+    }
+    
+    public var asTuppleDouble : (Double, Double)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asDouble,
+                let v2 = v[1]?.asDouble {
+                return (v1, v2)
+            }
+        }
+        return nil
+    }
+    
+    public var asTripleInt : (Int, Int, Int)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asInt,
+                let v2 = v[1]?.asInt,
+                let v3 = v[2]?.asInt {
+                return (v1, v2, v3)
+            }
+        }
+        return nil
+    }
+    
+    public var asTripleUInt : (UInt, UInt, UInt)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asUInt,
+                let v2 = v[1]?.asUInt,
+                let v3 = v[2]?.asUInt {
+                return (v1, v2, v3)
+            }
+        }
+        return nil
+    }
+    
+    public var asTripleDouble : (Double, Double, Double)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asDouble,
+                let v2 = v[1]?.asDouble,
+                let v3 = v[2]?.asDouble {
+                return (v1, v2, v3)
+            }
+        }
+        return nil
+    }
+    
+    public var asQuadrupleInt : (Int, Int, Int, Int)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asInt,
+                let v2 = v[1]?.asInt,
+                let v3 = v[2]?.asInt,
+                let v4 = v[3]?.asInt {
+                return (v1, v2, v3, v4)
+            }
+        }
+        return nil
+    }
+    
+    public var asQuadrupleUInt : (UInt, UInt, UInt, UInt)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asUInt,
+                let v2 = v[1]?.asUInt,
+                let v3 = v[2]?.asUInt,
+                let v4 = v[3]?.asUInt {
+                return (v1, v2, v3, v4)
+            }
+        }
+        return nil
+    }
+    
+    public var asQuadrupleDouble : (Double, Double, Double, Double)? {
+        if type.isFixedTypedVector {
+            if let v = self.asVector,
+                let v1 = v[0]?.asDouble,
+                let v2 = v[1]?.asDouble,
+                let v3 = v[2]?.asDouble,
+                let v4 = v[3]?.asDouble {
+                return (v1, v2, v3, v4)
+            }
+        }
+        return nil
     }
     
     private var indirect : UnsafeRawPointer? {
@@ -1434,14 +1677,19 @@ public struct FlxbVector : Sequence, CustomDebugStringConvertible {
     fileprivate let dataPointer : UnsafeRawPointer
     fileprivate let byteWidth : UInt8
     fileprivate let type : Type?
+    fileprivate let length: UInt8?
     
-    fileprivate init(dataPointer : UnsafeRawPointer, byteWidth : UInt8, type : Type? = nil) {
+    fileprivate init(dataPointer : UnsafeRawPointer, byteWidth : UInt8, type : Type? = nil, length: UInt8? = nil) {
         self.dataPointer = dataPointer
         self.byteWidth = byteWidth
         self.type = type
+        self.length = length
     }
     
     public var count : Int {
+        if let length = length {
+            return Int(length)
+        }
         if let size = readUInt(pointer: dataPointer - Int(byteWidth), width: byteWidth) {
             return Int(size)
         }
@@ -1769,7 +2017,7 @@ fileprivate enum Type : UInt8 {
     vector_int2, vector_uint2, vector_float2,
     vector_int3, vector_uint3, vector_float3,
     vector_int4, vector_uint4, vector_float4,
-    blob, bool
+    blob, bool, vector_bool = 36
     
     var isInline : Bool {
         return self == .bool || self.rawValue <= Type.float.rawValue
@@ -1780,13 +2028,10 @@ fileprivate enum Type : UInt8 {
     }
     
     var isTypedVector : Bool {
-        return self == .bool || (self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_string.rawValue)
+        return self == .vector_bool || (self.rawValue >= Type.vector_int.rawValue && self.rawValue <= Type.vector_string.rawValue)
     }
     
     func toTypedVector(length : UInt8 = 0) throws -> Type {
-        if self == .bool {
-            return .vector_uint
-        }
         switch length {
         case 0:
             return Type(rawValue: self.rawValue - Type.int.rawValue + Type.vector_int.rawValue) ?? Type.null

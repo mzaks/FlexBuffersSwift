@@ -30,4 +30,32 @@ class FlexBuffersToJSONTests: XCTestCase {
         let data = try?FlexBuffer.encode(["a": true, "b": 1, "c": FlxbValueNil(), "d":1.5] as FlxbValueMap)
         XCTAssertEqual(data!.root!.jsonString, "{\"a\":true,\"b\":1,\"c\":null,\"d\":1.5}")
     }
+    
+    func testMapWithTuples() {
+        let data = try?FlexBuffer.encode([
+            "a": CGPoint(x: 1, y: 2),
+            "b": CGRect(x: 1, y: 2, width: 3, height: 4),
+            "c": CGSize(width: 23, height: 44)
+        ] as FlxbValueMap)
+        XCTAssertEqual(data!.root!.jsonString, "{\"a\":[1.0,2.0],\"b\":[1.0,2.0,3.0,4.0],\"c\":[23.0,44.0]}")
+    }
+    
+    func testMapWithTuplesAndExplicitValueHandler() {
+        FlexBuffer.valueHandler = { flxb, v in
+            if let v = v as? CGPoint {
+                try flxb.add(value: (Int(v.x), Int(v.y)))
+                return true
+            }
+            return false
+        }
+        let data = try?FlexBuffer.encode([
+            "a": CGPoint(x: 1, y: 2),
+            "b": CGRect(x: 1, y: 2, width: 3, height: 4),
+            "c": CGSize(width: 23, height: 44)
+            ] as FlxbValueMap)
+        
+        XCTAssertEqual(data!.root!.jsonString, "{\"a\":[1,2],\"b\":[1.0,2.0,3.0,4.0],\"c\":[23.0,44.0]}")
+        
+        FlexBuffer.valueHandler = nil
+    }
 }

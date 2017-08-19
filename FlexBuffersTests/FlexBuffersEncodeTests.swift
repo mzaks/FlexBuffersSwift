@@ -20,7 +20,7 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddNil() {
-        expect(NSNull(), [0,0,1])
+        expect(FlxbValueNil(), [0,0,1])
     }
     
     func testAddTrue() {
@@ -32,106 +32,106 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddUInt8() {
-        expect(UInt8(230), [230, 8, 1])
+        expect(UInt(230), [230, 8, 1])
     }
     
     func testAddInt8() {
-        let v : Int8 = 25
+        let v : Int = 25
         expect(v, [25, 4, 1])
     }
     
     func testAddInt8NegativNumber() {
-        let v : Int8 = -25
+        let v : Int = -25
         expect(v, [231, 4, 1])
     }
     
     func testAddSmallInt16() {
-        let v : Int16 = 25
+        let v : Int = 25
         expect(v, [25, 4, 1])
     }
     
     func testAddBigInt16() {
-        let v : Int16 = 1025
+        let v : Int = 1025
         expect(v, [1, 4, 5, 2])
     }
     
     func testAddSmallUInt16() {
-        let v : UInt16 = 25
+        let v : UInt = 25
         expect(v, [25, 8, 1])
     }
     
     func testAddBigUInt16() {
-        let v : UInt16 = 1025
+        let v : UInt = 1025
         expect(v, [1, 4, 9, 2])
     }
     
     func testAddSmallInt32() {
-        let v : Int32 = 25
+        let v : Int = 25
         expect(v, [25, 4, 1])
     }
     
     func testAddMidInt32() {
-        let v : Int32 = 1025
+        let v : Int = 1025
         expect(v, [1, 4, 5, 2])
     }
     
     func testAddBigInt32() {
-        let v : Int32 = Int32.max
+        let v : Int = Int(Int32.max)
         expect(v, [255, 255, 255, 127, 6, 4])
     }
     
     func testAddSmallUInt32() {
-        let v : UInt32 = 25
+        let v : UInt = 25
         expect(v, [25, 8, 1])
     }
     
     func testAddMidUInt32() {
-        let v : UInt32 = 1025
+        let v : UInt = 1025
         expect(v, [1, 4, 9, 2])
     }
     
     func testAddBigUInt32() {
-        let v : UInt32 = UInt32.max
+        let v : UInt = UInt(UInt32.max)
         expect(v, [255, 255, 255, 255, 10, 4])
     }
     
     func testAddTinyInt64() {
-        let v : Int64 = 25
+        let v : Int = 25
         expect(v, [25, 4, 1])
     }
     
     func testAddSmallInt64() {
-        let v : Int64 = 1025
+        let v : Int = 1025
         expect(v, [1, 4, 5, 2])
     }
     
     func testAddMidInt64() {
-        let v : Int64 = 60025
+        let v : Int = 60025
         expect(v, [121, 234, 0, 0, 6, 4])
     }
     
     func testAddBigInt64() {
-        let v : Int64 = Int64.max
+        let v : Int = Int(Int64.max)
         expect(v, [255, 255, 255, 255, 255, 255, 255, 127, 7, 8])
     }
     
     func testAddTinyUInt64() {
-        let v : UInt64 = 25
+        let v : UInt = 25
         expect(v, [25, 8, 1])
     }
     
     func testAddSmallUInt64() {
-        let v : UInt64 = 1025
+        let v : UInt = 1025
         expect(v, [1, 4, 9, 2])
     }
     
     func testAddMidUInt64() {
-        let v : UInt64 = 66025
+        let v : UInt = 66025
         expect(v, [233, 1, 1, 0, 10, 4])
     }
     
     func testAddBigUInt64() {
-        let v : UInt64 = UInt64.max
+        let v : UInt = UInt(UInt64.max)
         expect(v, [255, 255, 255, 255, 255, 255, 255, 255, 11, 8])
     }
     
@@ -151,7 +151,7 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddFloat() {
-        let v : Float = 4.5
+        let v : Double = 4.5
         expect(v, [0, 0, 144, 64, 14, 4])
     }
     
@@ -209,11 +209,11 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddBoolArray() {
-        expect(bools: [true, false, true], [3, 1, 0, 1, 3, 48, 1])
+        expect(bools: [true, false, true], [3, 1, 0, 1, 3, 144, 1])
     }
     
     func testAddVectorWithOneInt() {
-        expect([64], [1, 64, 4, 2, 40, 1])
+        expect([64] as FlxbValueVector, [1, 64, 4, 2, 40, 1])
     }
     
     func testAddVectorWithVectorAndOneInt() {
@@ -231,7 +231,7 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddArrayWithVectorAndOneInt() {
-        expect([[61], 64], [1, 61, 4, 2, 3, 64, 40, 4, 4, 40, 1])
+        expect([[61] as FlxbValueVector, 64] as FlxbValueVector, [1, 61, 4, 2, 3, 64, 40, 4, 4, 40, 1])
     }
     
     func testAddVectorWithOneIntAndNulls() {
@@ -249,11 +249,11 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddArrayWithOneIntAndNulls() {
-        expect([NSNull(), NSNull(), 64, NSNull()], [4, 0, 0, 64, 0, 0, 0, 4, 0, 8, 40, 1])
+        expect([FlxbValueNil(), FlxbValueNil(), 64, FlxbValueNil()] as FlxbValueVector, [4, 0, 0, 64, 0, 0, 0, 4, 0, 8, 40, 1])
     }
     
     func testAddArrayOfStrings() {
-        expect(["foo", "bar", "baz"], [3, 102, 111, 111, 0, 3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 3, 15, 11, 7, 20, 20, 20, 6, 40, 1])
+        expect(["foo", "bar", "baz"] as FlxbValueVector, [3, 102, 111, 111, 0, 3, 98, 97, 114, 0, 3, 98, 97, 122, 0, 3, 15, 11, 7, 20, 20, 20, 6, 40, 1])
     }
     
     func testAddArrayOfStringsStrinc() {
@@ -261,12 +261,12 @@ class FlexBufferBuilderTests: XCTestCase {
     }
     
     func testAddArrayOfFloats() {
-        expect([4.5, 78.3, 29.2],
+        expect([4.5, 78.3, 29.2] as FlxbValueVector,
                [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 18, 64, 51, 51, 51, 51, 51, 147, 83, 64, 51, 51, 51, 51, 51, 51, 61, 64, 15, 15, 15, 27, 43, 1])
     }
     
     func testAddArrayOfInts() {
-        expect([4, 7, 29],
+        expect([4, 7, 29] as FlxbValueVector,
                [3, 4, 7, 29, 4, 4, 4, 6, 40, 1])
     }
     
@@ -333,6 +333,57 @@ class FlexBufferBuilderTests: XCTestCase {
         let encodedData = try!flx.finish()
         
         expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, nil, nil, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1])
+    }
+    
+    func testAddMapComplexAsData() {
+        let flx = FlexBuffer()
+        try!flx.addMap {
+            flx.add(key: "age", value: 35)
+            try!flx.addVector(key: "flags"){
+                flx.add(value: true)
+                flx.add(value: false)
+                flx.add(value: true)
+                flx.add(value: true)
+            }
+            flx.add(key: "weight", value: 72.5)
+            flx.add(key: "name", value: "Maxim")
+            try!flx.addMap(key: "address"){
+                flx.add(key: "city", value: "Bla")
+                flx.add(key: "zip", value: "12345")
+                flx.add(key: "countryCode", value: "XX")
+            }
+        }
+        let encodedData = try!flx.finish()
+        
+        let flx2 = FlexBuffer()
+        flx2.add(value: encodedData)
+        let finalEncodedData = try!flx2.finish()
+        
+        expect(encodedData: finalEncodedData, [144, 97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, nil, nil, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1, 0, 145, 0, 100, 2])
+    }
+    
+    func testEncodeBigData() {
+        var data = Data()
+        for _ in 0...1000 {
+            data.append(5)
+        }
+        let flx = FlexBuffer()
+        flx.add(value: data)
+        let encodedData = try!flx.finish()
+        
+        expect(encodedData: encodedData, [233, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 0, 234, 3, 101, 2])
+    }
+    
+    func testAddDataToMap(){
+        let data = Data(bytes: [1, 2, 3])
+        let flx = FlexBuffer()
+        try!flx.addMap {
+            try!flx.add(key: "A", value: data)
+            try!flx.add(keyString: "B", value: data)
+        }
+        let encodedData = try!flx.finish()
+        
+        expect(encodedData: encodedData, [65, 0, 3, 1, 2, 3, 66, 0, 3, 1, 2, 3, 2, 13, 8, 2, 1, 2, 15, 10, 100, 100, 4, 36, 1])
     }
     
     func testMapWithIndirectValues() {
@@ -415,8 +466,148 @@ class FlexBufferBuilderTests: XCTestCase {
         expect(encodedData: try!flx.finish(), [97, 0, 0, 98, 0, 0, 2, 7, 5, 2, 1, 2, 9, 7, 56, 56, 4, 36, 1])
     }
     
-    func expect(_ v : Any, _ data : [UInt8]){
-        let _data = try!FlexBuffer.encodeInefficient(v)
+    func testAddIntTuple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (1, 2))
+        expect(encodedData: try!flx.finish(), [1, 2, 2, 64, 1])
+    }
+    
+    func testAddIntTupleToMapWithStringKey() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(keyString: "a", value: (34, 120))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 34, 120, 1, 5, 1, 1, 1, 7, 64, 2, 36, 1])
+    }
+    
+    func testAddIntTupleToMap() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(key: "a", value: (34, 120))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 34, 120, 1, 5, 1, 1, 1, 7, 64, 2, 36, 1])
+    }
+    
+    func testAddUIntTuple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (UInt(1), UInt(2)))
+        expect(encodedData: try!flx.finish(), [1, 2, 2, 68, 1])
+    }
+    
+    func testAddUIntTupleToMapWithStringKey() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(keyString: "a", value: (UInt(34), UInt(220)))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 34, 220, 1, 5, 1, 1, 1, 7, 68, 2, 36, 1])
+    }
+    
+    func testAddUIntTupleToMap() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(key: "a", value: (UInt(3400), UInt(220)))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 72, 13, 220, 0, 1, 7, 1, 1, 1, 9, 69, 2, 36, 1])
+    }
+    
+    func testAddDoubleTuple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (0.5, 0.25))
+        expect(encodedData: try!flx.finish(), [0, 0, 0, 63, 0, 0, 128, 62, 8, 74, 1])
+    }
+    
+    func testAddDoubleTuple8Byte() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (0.1, -0.2))
+        expect(encodedData: try!flx.finish(), [154, 153, 153, 153, 153, 153, 185, 63, 154, 153, 153, 153, 153, 153, 201, 191, 16, 75, 1])
+    }
+    
+    func testAddDoubleTupleToMapWithStringKey() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(keyString: "a", value: (0.1, -0.2))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 0, 0, 0, 0, 0, 0, 154, 153, 153, 153, 153, 153, 185, 63, 154, 153, 153, 153, 153, 153, 201, 191, 1, 25, 1, 1, 1, 21, 75, 2, 36, 1])
+    }
+    
+    func testAddDoubleTupleToMap() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(key: "a", value: (0.1, -0.2))
+        }
+        
+        expect(encodedData: try!flx.finish(), [97, 0, 0, 0, 0, 0, 0, 0, 154, 153, 153, 153, 153, 153, 185, 63, 154, 153, 153, 153, 153, 153, 201, 191, 1, 25, 1, 1, 1, 21, 75, 2, 36, 1])
+    }
+    
+    func testAddIntTriple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (1, 2, 3))
+        expect(encodedData: try!flx.finish(), [1, 2, 3, 3, 76, 1])
+    }
+    
+    func testAddUIntTriple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (UInt(1), 2, 3))
+        expect(encodedData: try!flx.finish(), [1, 2, 3, 3, 80, 1])
+    }
+    
+    func testAddDoubleTriple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (0.25, 0.5, 0.75))
+        expect(encodedData: try!flx.finish(), [0, 0, 128, 62, 0, 0, 0, 63, 0, 0, 64, 63, 12, 86, 1])
+    }
+    
+    func testAddIntQuadruple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (1, 2, 3, 4))
+        expect(encodedData: try!flx.finish(), [1, 2, 3, 4, 4, 88, 1])
+    }
+    
+    func testAddUIntQuadruple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (UInt(1), 2, 3, 4))
+        expect(encodedData: try!flx.finish(), [1, 2, 3, 4, 4, 92, 1])
+    }
+    
+    func testAddDoubleQuadruple() {
+        let flx = FlexBuffer()
+        try? flx.add(value: (0.25, 0.5, 0.75, 1))
+        expect(encodedData: try!flx.finish(), [0, 0, 128, 62, 0, 0, 0, 63, 0, 0, 64, 63, 0, 0, 128, 63, 16, 98, 1])
+    }
+    
+    func testAddTuplesToMap() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(key:"a", value: (1, 2, 3))
+            try? flx.add(key:"b", value: (UInt(1), 2, 3))
+            try? flx.add(key:"c", value: (1.0, 2.0, 3.0))
+            try? flx.add(key:"d", value: (1.0, 2.0, 3.0, 4.0))
+            try? flx.add(key:"e", value: (1, 2, 3, 4))
+            try? flx.add(key:"f", value: (UInt(1), 2, 3, 4))
+        }
+        expect(encodedData: try!flx.finish(), [97, 0, 1, 2, 3, 98, 0, 1, 2, 3, 99, 0, 0, 0, 128, 63, 0, 0, 0, 64, 0, 0, 64, 64, 100, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 64, 0, 0, 64, 64, 0, 0, 128, 64, 101, 0, 1, 2, 3, 4, 102, 0, 1, 2, 3, 4, 6, 57, 53, 49, 36, 17, 12, 6, 1, 6, 64, 60, 56, 41, 24, 19, 76, 80, 86, 98, 88, 92, 12, 36, 1])
+    }
+    
+    func testAddTuplesToMapWithStringKey() {
+        let flx = FlexBuffer()
+        try? flx.addMap {
+            try? flx.add(keyString:"a", value: (1, 2, 3))
+            try? flx.add(keyString:"b", value: (UInt(1), 2, 3))
+            try? flx.add(keyString:"c", value: (1.0, 2.0, 3.0))
+            try? flx.add(keyString:"d", value: (1.0, 2.0, 3.0, 4.0))
+            try? flx.add(keyString:"e", value: (1, 2, 3, 4))
+            try? flx.add(keyString:"f", value: (UInt(1), 2, 3, 4))
+        }
+        expect(encodedData: try!flx.finish(), [97, 0, 1, 2, 3, 98, 0, 1, 2, 3, 99, 0, 0, 0, 128, 63, 0, 0, 0, 64, 0, 0, 64, 64, 100, 0, 0, 0, 0, 0, 128, 63, 0, 0, 0, 64, 0, 0, 64, 64, 0, 0, 128, 64, 101, 0, 1, 2, 3, 4, 102, 0, 1, 2, 3, 4, 6, 57, 53, 49, 36, 17, 12, 6, 1, 6, 64, 60, 56, 41, 24, 19, 76, 80, 86, 98, 88, 92, 12, 36, 1])
+    }
+    
+    func expect(_ v : FlxbValue, _ data : [UInt8]){
+        let _data = try!FlexBuffer.encode(v).data
         // then
         XCTAssertEqual([UInt8](_data), data)
     }
