@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreGraphics
 
 // MARK: FlexBuffers Builder logic
 
