@@ -18,6 +18,7 @@
 		0B43AB9A1F484F67000F76AB /* FlexBufferBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */; };
 		0B43AB9E1F4EC19F000F76AB /* FlexBufferBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB9D1F4EC19F000F76AB /* FlexBufferBuilderTests.swift */; };
 		0B43ABDD1F541D3B000F76AB /* FlexBufferBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */; };
+		0B43ABDE1F5463F3000F76AB /* FlexBufferBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */; };
 		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
 		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
 		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
@@ -340,6 +341,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B43ABDE1F5463F3000F76AB /* FlexBufferBuilder.swift in Sources */,
 				0B1BF9991EE16E75005F654F /* FlexBuffers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
