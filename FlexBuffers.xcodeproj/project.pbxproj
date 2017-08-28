@@ -15,6 +15,9 @@
 		0B2092381E9194FA00EF3AF5 /* flatBuffersBench.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2092371E9194FA00EF3AF5 /* flatBuffersBench.swift */; };
 		0B20923C1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */; };
 		0B2092401E992FDE00EF3AF5 /* giphy_trending.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */; };
+		0B43AB9A1F484F67000F76AB /* FlexBufferBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */; };
+		0B43AB9E1F4EC19F000F76AB /* FlexBufferBuilderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB9D1F4EC19F000F76AB /* FlexBufferBuilderTests.swift */; };
+		0B43ABDD1F541D3B000F76AB /* FlexBufferBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */; };
 		0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */; };
 		0B6554FF1E1A9BF700782925 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6554FE1E1A9BF700782925 /* main.swift */; };
 		0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */; };
@@ -56,6 +59,8 @@
 		0B20923B1E92EE0D00EF3AF5 /* JsonToFlexConverterTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsonToFlexConverterTest.swift; sourceTree = "<group>"; };
 		0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = giphy_trending.json; sourceTree = "<group>"; };
 		0B2A86651F2F354E009F6849 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferBuilder.swift; sourceTree = "<group>"; };
+		0B43AB9D1F4EC19F000F76AB /* FlexBufferBuilderTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferBuilderTests.swift; sourceTree = "<group>"; };
 		0B6554F61E16B56E00782925 /* FlexBufferDecodeTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlexBufferDecodeTest.swift; sourceTree = "<group>"; };
 		0B6554FC1E1A9BF700782925 /* FlexBuffersPerformanceTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = FlexBuffersPerformanceTest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B6554FE1E1A9BF700782925 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -139,6 +144,7 @@
 				0BB1BE681E1271E900A9041B /* FlexBuffers.h */,
 				0BB1BE691E1271E900A9041B /* Info.plist */,
 				0BB1BE7F1E12720400A9041B /* FlexBuffers.swift */,
+				0B43AB991F484F67000F76AB /* FlexBufferBuilder.swift */,
 			);
 			path = FlexBuffers;
 			sourceTree = "<group>";
@@ -154,6 +160,7 @@
 				0B20923F1E992FDE00EF3AF5 /* giphy_trending.json */,
 				0B0A1AC71F39C9EE00D242AE /* escaping.json */,
 				0B0A1AD01F3C633100D242AE /* FlexBuffersToJSONTests.swift */,
+				0B43AB9D1F4EC19F000F76AB /* FlexBufferBuilderTests.swift */,
 			);
 			path = FlexBuffersTests;
 			sourceTree = "<group>";
@@ -343,6 +350,7 @@
 			files = (
 				0B6555031E1A9C0600782925 /* FlexBuffers.swift in Sources */,
 				0B6554FF1E1A9BF700782925 /* main.swift in Sources */,
+				0B43ABDD1F541D3B000F76AB /* FlexBufferBuilder.swift in Sources */,
 				0B2092381E9194FA00EF3AF5 /* flatBuffersBench.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,6 +359,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B43AB9A1F484F67000F76AB /* FlexBufferBuilder.swift in Sources */,
 				0BB1BE801E12720400A9041B /* FlexBuffers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -363,6 +372,7 @@
 				0B0415CD1E2A721100B376C7 /* FlexBufferRoundtripTest.swift in Sources */,
 				0B6554F71E16B56E00782925 /* FlexBufferDecodeTest.swift in Sources */,
 				0BB1BE741E1271E900A9041B /* FlexBuffersEncodeTests.swift in Sources */,
+				0B43AB9E1F4EC19F000F76AB /* FlexBufferBuilderTests.swift in Sources */,
 				0B0A1AD11F3C633100D242AE /* FlexBuffersToJSONTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

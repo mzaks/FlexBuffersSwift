@@ -58,4 +58,15 @@ class FlexBuffersToJSONTests: XCTestCase {
         
         FlexBuffer.valueHandler = nil
     }
+    
+    func testMapWithData() {
+        let data = try?FlexBuffer.encode([
+            "a": 123,
+            "b": "blabla".data(using: .utf8)!
+            ] as FlxbValueMap)
+        
+        XCTAssertEqual(data!.root!.jsonString, "{\"a\":123,\"b\":\"YmxhYmxh\"}")
+        
+        FlexBuffer.valueHandler = nil
+    }
 }

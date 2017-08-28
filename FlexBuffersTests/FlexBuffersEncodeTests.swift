@@ -9,7 +9,7 @@
 import XCTest
 import FlexBuffers
 
-class FlexBufferBuilderTests: XCTestCase {
+class FlexBufferEncodeTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
@@ -332,7 +332,7 @@ class FlexBufferBuilderTests: XCTestCase {
         }
         let encodedData = try!flx.finish()
         
-        expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, nil, nil, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1])
+        expect(encodedData: encodedData, [97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, 0, 0, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1])
     }
     
     func testAddMapComplexAsData() {
@@ -359,7 +359,7 @@ class FlexBufferBuilderTests: XCTestCase {
         flx2.add(value: encodedData)
         let finalEncodedData = try!flx2.finish()
         
-        expect(encodedData: finalEncodedData, [144, 97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, nil, nil, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1, 0, 145, 0, 100, 2])
+        expect(encodedData: finalEncodedData, [144, 97, 103, 101, 0, 102, 108, 97, 103, 115, 0, 4, 1, 0, 1, 1, 104, 104, 104, 104, 119, 101, 105, 103, 104, 116, 0, 110, 97, 109, 101, 0, 5, 77, 97, 120, 105, 109, 0, 97, 100, 100, 114, 101, 115, 115, 0, 99, 105, 116, 121, 0, 3, 66, 108, 97, 0, 122, 105, 112, 0, 5, 49, 50, 51, 52, 53, 0, 99, 111, 117, 110, 116, 114, 121, 67, 111, 100, 101, 0, 2, 88, 88, 0, 3, 38, 18, 30, 3, 1, 3, 38, 11, 31, 20, 20, 20, 5, 59, 98, 95, 74, 82, 0, 0, 7, 0, 0, 0, 1, 0, 0, 0, 5, 0, 0, 0, 26, 0, 0, 0, 35, 0, 0, 0, 113, 0, 0, 0, 96, 0, 0, 0, 0, 0, 145, 66, 36, 6, 40, 20, 14, 25, 38, 1, 0, 145, 0, 100, 2])
     }
     
     func testEncodeBigData() {
@@ -397,7 +397,7 @@ class FlexBufferBuilderTests: XCTestCase {
         }
         let encodedData = try!flx.finish()
         
-        expect(encodedData: encodedData, [99, 0, 45, 97, 0, 236, 98, 0, 0, 0, 240, 64, 100, 0, nil, nil, 57, 180, 200, 118, 190, 15, 76, 64, 4, 22, 20, 27, 16, 4, 1, 4, 27, 25, 32, 19, 24, 34, 28, 35, 8, 36, 1])
+        expect(encodedData: encodedData, [99, 0, 45, 97, 0, 236, 98, 0, 0, 0, 240, 64, 100, 0, 0, 0, 57, 180, 200, 118, 190, 15, 76, 64, 4, 22, 20, 27, 16, 4, 1, 4, 27, 25, 32, 19, 24, 34, 28, 35, 8, 36, 1])
     }
     
     func testVectorWithIndirectValues() {
@@ -411,7 +411,7 @@ class FlexBufferBuilderTests: XCTestCase {
         }
         let encodedData = try!flx.finish()
         
-        expect(encodedData: encodedData, [45, 236, nil, nil, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
+        expect(encodedData: encodedData, [45, 236, 0, 0, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
     }
     
     func testHavingCatchStatement() {
@@ -431,7 +431,7 @@ class FlexBufferBuilderTests: XCTestCase {
         }
         
         
-        expect(encodedData: encodedData, [45, 236, nil, nil, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
+        expect(encodedData: encodedData, [45, 236, 0, 0, 0, 0, 240, 64, 57, 180, 200, 118, 190, 15, 76, 64, 4, 17, 17, 15, 12, 28, 24, 34, 35, 8, 40, 1])
     }
     
     func testGrowInternalBuffer() {
@@ -660,12 +660,10 @@ class FlexBufferBuilderTests: XCTestCase {
         XCTAssertEqual([UInt8](encodedData), data)
     }
     
-    func expect(encodedData : Data, _ data : [UInt8?]){
+    func expect(encodedData : Data, _ data : [UInt8]){
         let encoded = [UInt8](encodedData)
         for pair in zip(encoded, data) {
-            if pair.1 != nil {
-                XCTAssertEqual(pair.0, pair.1, "\(pair.0.description) != \(pair.1.debugDescription) in [\(encoded) - \(data)]")
-            }
+            XCTAssertEqual(pair.0, pair.1, "\(pair.0.description) != \(pair.1.description) in [\(encoded) - \(data)]")
         }
     }
 }

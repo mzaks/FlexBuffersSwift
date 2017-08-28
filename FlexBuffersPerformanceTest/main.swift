@@ -62,6 +62,36 @@ func createContainer(flx : FlexBuffer) throws -> Data {
     return try!flx.finish()
 }
 
+func createContainerWithBuilder() throws -> Data {
+    return try FlexBufferBuilder.encodeMap{
+        $0.add("fruit", 2)
+        $0.add("initialized", true)
+        $0.addVector("list"){
+            for i in 0..<3 {
+                let ident : UInt64 = 0xABADCAFE + UInt64(i)
+                $0.addMap {
+                    $0.add("name","Hello, World!")
+                    $0.add("postfix", UInt(33 + i))
+                    $0.indirectAdd("rating" , 3.1415432432445543543+Double(i))
+                    $0.addMap("sibling") {
+                        $0.addMap("parent") {
+                            $0.indirectAdd("count",10000 + i)
+                            $0.indirectAdd("id", ident)
+                            $0.indirectAdd("length", UInt(1000000 + i))
+                            $0.add("prefix", 64 + i)
+                        }
+                        $0.indirectAdd("ratio", Double(3.14159 + Float(i)))
+                        $0.indirectAdd("size", UInt(10000 + i))
+                        $0.indirectAdd("time", 123456 + i)
+                    }
+                }
+            }
+        }
+        $0.add("location", "http://google.com/flatbuffers/")
+    }.data
+}
+
+
 let parent0 = [
     "id" : 0xABADCAFE + 0,
     "count" : 10000 + 0,
@@ -458,7 +488,7 @@ var d = 0.0
 
 var t = CFAbsoluteTimeGetCurrent()
 
-let flx = FlexBuffer(initialSize: 1, options: [])
+let flx = FlexBuffer(initialSize: 1024, options: [])
 for i in 0 ..< NumberOfEncodings {
     datas[i] = try!createContainer(flx: flx)
 }
@@ -469,15 +499,15 @@ print("\(data) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas0 = [Data!](repeating: nil, count: NumberOfEncodings)
-let flx0 = FlexBuffer(initialSize: 1, options: [])
+var datas_ = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
-    datas0[i] = FlxbData(data:try!createContainer(flx: flx0)).root!.jsonString.data(using: .utf8)
+    datas_[i] = try!createContainerWithBuilder()
 }
-let data0 = datas0[0]!
+let data_ = datas_[0]!
 d = CFAbsoluteTimeGetCurrent() - t
-print("Efficient FlexBuffers encoding to JSON string (x\(NumberOfEncodings)):")
-print("\(data0) in \(d) \(getMegabytesUsed()! - m) MB")
+print("FlexBuffers encoding with Builder (x\(NumberOfEncodings)):")
+print("\(data_) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
@@ -493,6 +523,18 @@ print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
+var datas5 = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
+for i in 0 ..< NumberOfEncodings {
+    datas5[i] = createFlexBufferFromJsonString().data
+}
+let data5 = datas5[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("FlexBuffers encoding from JSON string (x\(NumberOfEncodings)):")
+print("\(data5) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
 var datas2 = [Data!](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
@@ -502,6 +544,19 @@ let data2 = datas2[0]!
 d = CFAbsoluteTimeGetCurrent() - t
 print("JSON encoding (x\(NumberOfEncodings)):")
 print("\(data2) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
+var datas0 = [Data!](repeating: nil, count: NumberOfEncodings)
+t = CFAbsoluteTimeGetCurrent()
+let flx0 = FlexBuffer(initialSize: 1024, options: [])
+for i in 0 ..< NumberOfEncodings {
+    datas0[i] = FlxbData(data:try!createContainer(flx: flx0)).root!.jsonString.data(using: .utf8)
+}
+let data0 = datas0[0]!
+d = CFAbsoluteTimeGetCurrent() - t
+print("Efficient FlexBuffers encoding to JSON string (x\(NumberOfEncodings)):")
+print("\(data0) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
@@ -526,18 +581,6 @@ let data4 = datas4[0]!
 d = CFAbsoluteTimeGetCurrent() - t
 print("FlatBuffers encoding without data duplication (x\(NumberOfEncodings)):")
 print("\(data4) in \(d) \(getMegabytesUsed()! - m) MB")
-print("-")
-m = getMegabytesUsed()!
-
-var datas5 = [Data!](repeating: nil, count: NumberOfEncodings)
-t = CFAbsoluteTimeGetCurrent()
-for i in 0 ..< NumberOfEncodings {
-    datas5[i] = createFlexBufferFromJsonString().data
-}
-let data5 = datas5[0]!
-d = CFAbsoluteTimeGetCurrent() - t
-print("FlexBuffers encoding from JSON string (x\(NumberOfEncodings)):")
-print("\(data5) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-------------")
 m = getMegabytesUsed()!
 
@@ -551,6 +594,18 @@ print("Decoding (x\(NumberOfDecodings)) result of efficient FlexBuffers encoding
 print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
+
+t = CFAbsoluteTimeGetCurrent()
+sum = 0
+for i in 0 ..< NumberOfDecodings {
+    sum += use(data_, start: i)
+}
+d = CFAbsoluteTimeGetCurrent() - t
+print("Decoding (x\(NumberOfDecodings)) result of efficient FlexBuffers encoding with Builder:")
+print("\(sum) in \(d) \(getMegabytesUsed()! - m) MB")
+print("-")
+m = getMegabytesUsed()!
+
 
 t = CFAbsoluteTimeGetCurrent()
 sum = 0

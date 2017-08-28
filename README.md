@@ -27,7 +27,7 @@ try!flx.addMap {
 }
 let data = flx.finish()
 
-let map = try!FlexBuffer.decode(data: data)!.asMap!
+let map = FlxbData(data: data).root!.asMap!
 print(map.debugDescription)
 ```
 
@@ -76,48 +76,54 @@ Results on MBP Retina 2015
 
 ```
 Efficient FlexBuffers encoding (x100000):
-676 bytes in 0.974463999271393 106.312 MB
+676 bytes in 1.0978490114212 106.336 MB
 -
-Efficient FlexBuffers encoding to JSON string (x100000):
-654 bytes in 2.22512096166611 27.9219 MB
+FlexBuffers encoding with Builder (x100000):
+676 bytes in 1.28725802898407 75.6953 MB
 -
 Convinient FlexBuffers encoding (x100000):
-1010 bytes in 1.60217899084091 105.129 MB
--
-JSON encoding (x100000):
-657 bytes in 6.67863005399704 444.391 MB
--
-FlatBuffers encoding (x100000):
-352 bytes in 0.441623032093048 84.5078 MB
--
-FlatBuffers encoding without data duplication (x100000):
-304 bytes in 0.54592502117157 75.3828 MB
+1010 bytes in 2.00599104166031 107.188 MB
 -
 FlexBuffers encoding from JSON string (x100000):
-704 bytes in 1.80597501993179 79.0039 MB
+704 bytes in 2.08162301778793 79.3438 MB
+-
+JSON encoding (x100000):
+657 bytes in 6.31411296129227 442.465 MB
+-
+Efficient FlexBuffers encoding to JSON string (x100000):
+654 bytes in 1.30120497941971 23.7539 MB
+-
+FlatBuffers encoding (x100000):
+352 bytes in 0.437988996505737 83.7344 MB
+-
+FlatBuffers encoding without data duplication (x100000):
+304 bytes in 0.568202972412109 75.7031 MB
 -------------
 Decoding (x100000) result of efficient FlexBuffers encoding:
-864436166550000 in 0.270677983760834 0.0 MB
+864436166550000 in 0.311857998371124 0.00390625 MB
+-
+Decoding (x100000) result of efficient FlexBuffers encoding with Builder:
+864436166550000 in 0.309445977210999 0.00390625 MB
 -
 Decoding (x100000) result of efficient FlexBuffers encoding and using access chaining:
-864436166550000 in 0.469451010227203 0.0078125 MB
+864436166550000 in 0.609730005264282 0.00390625 MB
 -
 Decoding (x100000) result of convinient FlexBuffers encoding:
-864436166550000 in 0.268750011920929 0.00390625 MB
+864436166550000 in 0.321048974990845 0.00390625 MB
 -
 Decoding (x100000) JSON:
-864436166550000 in 3.85789197683334 163.832 MB
+864436166550000 in 3.66075402498245 167.09 MB
 -
 Decoding (x100000) FlatBuffers:
-864436166550000 in 0.017283022403717 0.0078125 MB
+864436166550000 in 0.0174689888954163 0.0078125 MB
 -
 Decoding FlexBuffers created from JSON string (x100000):
-864436166550000 in 0.271202027797699 0.0078125 MB
+864436166550000 in 0.32822197675705 0.00390625 MB
 -
 Decoding JSON by encoding it to FlexBuffers and than using it (x100000):
-864436166550000 in 2.09489101171494 1.49609 MB
+864436166550000 in 2.41890394687653 1.46094 MB
 -
 Decoding unsorted JSON by encoding it to FlexBuffers and than using it (x100000):
-864436166550000 in 2.1292319893837 1.55469 MB
+864436166550000 in 2.49017596244812 1.44531 MB
 -
 ```

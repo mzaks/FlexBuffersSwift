@@ -33,6 +33,7 @@ public class FlexBuffer {
         
         self.options = options
         buffer = UnsafeMutableRawPointer.allocate(bytes: self.initialSize, alignedTo: 1)
+        buffer.initializeMemory(as: UInt8.self, at: 0, count: self.initialSize, to: 0)
         offset = 0
     }
     
@@ -279,7 +280,7 @@ public class FlexBuffer {
         stack.append(Value(value: UInt64(sloc), type: .string, bitWidth: bitWidth))
     }
     
-    fileprivate func key(_ s : String) {
+    func key(_ s : String) {
         let sloc : Int
         if options.contains(.shareKeys), let index = keyPool[s] {
             sloc = index
@@ -296,7 +297,7 @@ public class FlexBuffer {
         stack.append(Value(value: UInt64(sloc), type: .key, bitWidth: .width8))
     }
     
-    fileprivate func key(_ s : StaticString) {
+    func key(_ s : StaticString) {
         let sloc : Int
         if options.contains(.shareKeys) == false {
             sloc = offset
@@ -424,6 +425,7 @@ public class FlexBuffer {
             let prevBuffer = buffer
             buffer = UnsafeMutableRawPointer.allocate(bytes: currentSize, alignedTo: 1)
             buffer.copyBytes(from: prevBuffer, count: offset)
+            buffer.initializeMemory(as: UInt8.self, at: offset, count: currentSize - offset, to: 0)
             prevBuffer.deallocate(bytes: prevSize, alignedTo: 1)
         }
         buffer.advanced(by: offset).copyBytes(from: &v, count: Int(size))
@@ -467,33 +469,22 @@ public class FlexBuffer {
         }
     }
     
-    private func createBlob(data : [UInt8], length : Int, trailing : Int, type : Type) {
-        let bitWidth = BitWidth.width(uint: UInt64(length))
-        let byteWidth = align(width: bitWidth)
-        write(value: length, size: byteWidth)
-        let sloc = offset
-        for d in data {
-            write(value: d, size: 1)
-        }
-        stack.append(Value(value: UInt64(sloc), type: type, bitWidth: bitWidth))
-    }
-    
-    fileprivate func startVector() -> Int {
+    func startVector() -> Int {
         return stack.count
     }
     
-    fileprivate func startMap() -> Int {
+    func startMap() -> Int {
         return stack.count
     }
     
-    fileprivate func endVector(start : Int, typed : Bool, fixed : Bool) throws -> Int {
+    func endVector(start : Int, typed : Bool, fixed : Bool) throws -> Int {
         let vec = try creteVector(start: start, vecLen: stack.count - start, step: 1, typed: typed, fixed: fixed)
         stack.removeLast(stack.count - start)
         stack.append(vec)
         return Int(vec.value.asUInt)
     }
     
-    fileprivate func endMap(start : Int) throws {
+    func endMap(start : Int) throws {
         var len = stack.count - start
         guard (len % 2) == 0 else {
             throw FlexBufferEncodeError(message: "We should have interleaved keys and values on the stack. Make sure it is an even number. Currently it is \(len)")
@@ -678,7 +669,11 @@ extension FlexBuffer {
         }
         if let i = v as? Int {
             int(i)
+        } else if let u = v as? Int64 {
+            int(u)
         } else if let u = v as? UInt {
+            uint(u)
+        } else if let u = v as? UInt64 {
             uint(u)
         } else if let b = v as? Bool {
             bool(b)
@@ -700,6 +695,8 @@ extension FlexBuffer {
             try add(value: (Double(s.width), Double(s.height)))
         } else if let r = v as? CGRect {
             try add(value: (Double(r.origin.x), Double(r.origin.y), Double(r.size.width), Double(r.size.height)))
+        }  else if let d = v as? Data {
+            add(value: d)
         } else {
             throw FlexBufferEncodeError(message: "Unexpected FlxbValue type added `\(type(of: v))`. Consider setting your own `FlexBuffer.valueHandler`")
         }
@@ -724,7 +721,9 @@ extension FlexBuffer {
 
 public protocol FlxbValue {}
 extension Int: FlxbValue {}
+extension Int64: FlxbValue {}
 extension UInt: FlxbValue {}
+extension UInt64: FlxbValue {}
 extension Bool: FlxbValue {}
 extension Double: FlxbValue {}
 extension StaticString: FlxbValue {}
@@ -732,6 +731,7 @@ extension String: FlxbValue {}
 extension CGPoint: FlxbValue {}
 extension CGRect: FlxbValue {}
 extension CGSize: FlxbValue {}
+extension Data: FlxbValue {}
 
 public struct FlxbValueNil: FlxbValue {
     public init(){}
@@ -741,6 +741,9 @@ public struct FlxbValueVector: FlxbValue, ExpressibleByArrayLiteral {
     let values: [FlxbValue]
     public init(arrayLiteral elements: FlxbValue...) {
         values = elements
+    }
+    public init(values: [FlxbValue]) {
+        self.values = values
     }
 }
 
@@ -1617,6 +1620,16 @@ public struct FlxbReference : CustomDebugStringConvertible {
         return nil
     }
     
+    public var asData: Data? {
+        if type == .blob {
+            if let p = self.indirect,
+                let size = readUInt(pointer: p - Int(byteWidth), width: byteWidth) {
+                return Data(bytes: p, count: Int(size))
+            }
+        }
+        return nil
+    }
+    
     private var indirect : UnsafeRawPointer? {
         return _indirect(pointer: dataPointer, width: parentWidth)
     }
@@ -1649,6 +1662,9 @@ public struct FlxbReference : CustomDebugStringConvertible {
         }
         if let v = asVector {
             return v.debugDescription
+        }
+        if let v = asData {
+            return "\"\(v.base64EncodedString())\""
         }
         return "null"
     }
