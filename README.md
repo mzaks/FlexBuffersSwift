@@ -27,7 +27,7 @@ try!flx.addMap {
 }
 let data = flx.finish()
 
-let map = FlxbData(data: data).root!.asMap!
+let map = FlxbData(data: data)
 print(map.debugDescription)
 ```
 
