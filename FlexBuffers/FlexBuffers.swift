@@ -1266,7 +1266,7 @@ public extension FlexBuffer {
 public struct FlxbData : CustomDebugStringConvertible {
     public let data: Data
     public let root: FlxbReference?
-    init(data: Data) {
+    public init(data: Data) {
         self.data = data
         self.root = FlexBuffer.decode(data: data)
     }
