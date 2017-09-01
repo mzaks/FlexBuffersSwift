@@ -1942,6 +1942,9 @@ public struct FlxbMap : Sequence, CustomDebugStringConvertible {
 // MARK: - Custom private Types and Functions
 
 fileprivate func readInt(pointer : UnsafeRawPointer, width : UInt8) -> Int64? {
+    guard 0 == (UInt(bitPattern: pointer) & (UInt(width) - 1)) else {
+        return nil
+    }
     if width == 1 {
         return Int64(pointer.load(as: Int8.self))
     }
@@ -1958,6 +1961,9 @@ fileprivate func readInt(pointer : UnsafeRawPointer, width : UInt8) -> Int64? {
 }
 
 fileprivate func readUInt(pointer : UnsafeRawPointer, width : UInt8) -> UInt64? {
+    guard 0 == (UInt(bitPattern: pointer) & (UInt(width) - 1)) else {
+        return nil
+    }
     if width == 1 {
         return UInt64(pointer.load(as: UInt8.self))
     }
@@ -1974,6 +1980,9 @@ fileprivate func readUInt(pointer : UnsafeRawPointer, width : UInt8) -> UInt64? 
 }
 
 fileprivate func readFloat(pointer : UnsafeRawPointer, width : UInt8) -> Float? {
+    guard 0 == (UInt(bitPattern: pointer) & (UInt(width) - 1)) else {
+        return nil
+    }
     if width == 4 {
         return pointer.load(as: Float.self)
     }
@@ -1984,6 +1993,9 @@ fileprivate func readFloat(pointer : UnsafeRawPointer, width : UInt8) -> Float? 
 }
 
 fileprivate func readDouble(pointer : UnsafeRawPointer, width : UInt8) -> Double? {
+    guard 0 == (UInt(bitPattern: pointer) & (UInt(width) - 1)) else {
+        return nil
+    }
     if width == 4 {
         return Double(pointer.load(as: Float.self))
     }
