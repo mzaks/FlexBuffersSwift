@@ -5,6 +5,13 @@ Swift implementation of FlexBuffers - a sub project of Googles FlatBuffers proje
 FlexBuffers is a self suficient binary data representation which can encode numbers, strings, maps and vectors.
 
 # Usage
+Following blog post describes the usage in great detail:
+https://medium.com/@icex33/flexbuffersswift-9546bb217aeb
+
+Less detailed discripiton can be found below.
+
+---
+
 ```swift
 // {vec:[-100,"Fred",4.0], bar:[1,2,3], bar3:[1,2,3], foo:100, mymap:{foo:"Fred"}}
 let flx = FlexBuffer()
@@ -31,7 +38,7 @@ let map = FlxbData(data: data)
 print(map.debugDescription)
 ```
 
-There is also an API for convinient encoding:
+There is an API for convinient encoding:
 ```swift
 let flxbData = try!FlexBuffer.encode([
     "age" : 35,
@@ -45,13 +52,13 @@ let flxbData = try!FlexBuffer.encode([
 ] as FlxbValueMap)
 ```
 
-FlexBuffersSwift also incorporates it's own efficient JSON parser which is used to transform JSON to FlexBuffer binary.
+FlexBuffersSwift incorporates it's own efficient JSON parser which is used to transform JSON to FlexBuffer binary.
 
 ```
 let flxbData = try!FlexBuffer.dataFrom(jsonData:"{name:\"Maxim\", birthday:{\"year\": 1981, month: 6, day: 12}}".data(using: .utf8)!)
 ```
 
-The binary can than be read with no parsing costs in a strong typed way:
+The binary can be read with no parsing costs in a strong typed way:
 
 ```
 let root = flxbData.root
