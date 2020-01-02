@@ -375,7 +375,7 @@ class FlexBufferEncodeTests: XCTestCase {
     }
     
     func testAddDataToMap(){
-        let data = Data(bytes: [1, 2, 3])
+        let data = Data([1, 2, 3])
         let flx = FlexBuffer()
         try!flx.addMap {
             try!flx.add(key: "A", value: data)

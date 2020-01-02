@@ -33,13 +33,13 @@ public class FlexBuffer {
         }
         
         self.options = options
-        buffer = UnsafeMutableRawPointer.allocate(bytes: self.initialSize, alignedTo: 1)
-        buffer.initializeMemory(as: UInt8.self, at: 0, count: self.initialSize, to: 0)
+        buffer = UnsafeMutableRawPointer.allocate(byteCount: self.initialSize, alignment: 1)
+        buffer.initializeMemory(as: UInt8.self, repeating: 0, count: self.initialSize)
         offset = 0
     }
     
     deinit {
-        buffer.deallocate(bytes: currentSize, alignedTo: 1)
+        buffer.deallocate()
     }
     
     public func addVector(_ f : () throws -> ()) throws {
@@ -411,8 +411,8 @@ public class FlexBuffer {
     
     fileprivate func align(width : BitWidth) -> UInt8 {
         let byteWidth = 1 << width.rawValue
-        offset += paddingSize(bufSize: offset, scalarSize: byteWidth)
-        return byteWidth
+        offset += paddingSize(bufSize: offset, scalarSize: UInt8(byteWidth))
+        return UInt8(byteWidth)
     }
     
     fileprivate func write<T>(value : T, size : UInt8) {
@@ -424,12 +424,12 @@ public class FlexBuffer {
         }
         if prevSize < currentSize {
             let prevBuffer = buffer
-            buffer = UnsafeMutableRawPointer.allocate(bytes: currentSize, alignedTo: 1)
-            buffer.copyBytes(from: prevBuffer, count: offset)
-            buffer.initializeMemory(as: UInt8.self, at: offset, count: currentSize - offset, to: 0)
-            prevBuffer.deallocate(bytes: prevSize, alignedTo: 1)
+            buffer = UnsafeMutableRawPointer.allocate(byteCount: currentSize, alignment: 1)
+            buffer.initializeMemory(as: UInt8.self, repeating: 0, count: currentSize)
+            buffer.copyMemory(from: prevBuffer, byteCount: offset)
+            prevBuffer.deallocate()
         }
-        buffer.advanced(by: offset).copyBytes(from: &v, count: Int(size))
+        buffer.advanced(by: offset).copyMemory(from: &v, byteCount: Int(size))
         offset = newOffest
     }
     
@@ -764,12 +764,13 @@ extension FlexBuffer {
         }
         let byteWidth = data[data.count - 1]
         let packedType = data[data.count - 2]
-        
-        var pointer : UnsafePointer<UInt8>! = nil
-        data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) in
-            pointer = u8Ptr
+
+        let p2 = UnsafeMutableRawPointer.allocate(byteCount: data.count, alignment: 1)
+
+        data.withUnsafeBytes { (p) in
+            p2.copyMemory(from: p.baseAddress!, byteCount: data.count)
         }
-        let p = pointer.advanced(by: (data.count - Int(byteWidth) - 2))
+        let p = p2.advanced(by: (data.count - Int(byteWidth) - 2))
         return FlxbReference(dataPointer: UnsafeRawPointer(p), parentWidth: byteWidth, packedType: packedType)
     }
 }
@@ -777,439 +778,439 @@ extension FlexBuffer {
 // MARK: - addMethod for Primitives
 
 public extension FlexBuffer {
-    public func addNull(){
+    func addNull(){
         null()
     }
-    public func addNull(keyString : String){
+    func addNull(keyString : String){
         self.key(keyString)
         null()
     }
-    public func addNull(key : StaticString){
+    func addNull(key : StaticString){
         self.key(key)
         null()
     }
-    public func add(value v : Bool){
+    func add(value v : Bool){
         bool(v)
     }
-    public func add(keyString : String, value v : Bool){
+    func add(keyString : String, value v : Bool){
         self.key(keyString)
         bool(v)
     }
-    public func add(key : StaticString, value v : Bool){
+    func add(key : StaticString, value v : Bool){
         self.key(key)
         bool(v)
     }
-    public func add(array vs : [Bool]) throws {
+    func add(array vs : [Bool]) throws {
         let start = startVector()
         for v in vs {
             bool(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [Bool]) throws {
+    func add(keyString : String, value vs : [Bool]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [Bool]) throws {
+    func add(key : StaticString, value vs : [Bool]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : Int){
+    func add(value v : Int){
         int(v)
     }
-    public func add(keyString : String, value v : Int){
+    func add(keyString : String, value v : Int){
         self.key(keyString)
         int(v)
     }
-    public func add(key : StaticString, value v : Int){
+    func add(key : StaticString, value v : Int){
         self.key(key)
         int(v)
     }
-    public func add(indirectValue v : Int){
+    func add(indirectValue v : Int){
         pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : Int){
+    func add(keyString : String, indirectValue v : Int){
         self.key(keyString)
         pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : Int){
+    func add(key : StaticString, indirectValue v : Int){
         self.key(key)
         pushIndirect(v)
     }
-    public func add(array vs : [Int]) throws {
+    func add(array vs : [Int]) throws {
         let start = startVector()
         for v in vs {
             int(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [Int]) throws {
+    func add(keyString : String, value vs : [Int]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [Int]) throws {
+    func add(key : StaticString, value vs : [Int]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : Int64){
+    func add(value v : Int64){
         int(v)
     }
-    public func add(keyString : String, value v : Int64){
+    func add(keyString : String, value v : Int64){
         self.key(keyString)
         int(v)
     }
-    public func add(key : StaticString, value v : Int64){
+    func add(key : StaticString, value v : Int64){
         self.key(key)
         int(v)
     }
-    public func add(indirectValue v : Int64){
+    func add(indirectValue v : Int64){
         pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : Int64){
+    func add(keyString : String, indirectValue v : Int64){
         self.key(keyString)
         pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : Int64){
+    func add(key : StaticString, indirectValue v : Int64){
         self.key(key)
         pushIndirect(v)
     }
-    public func add(array vs : [Int64]) throws {
+    func add(array vs : [Int64]) throws {
         let start = startVector()
         for v in vs {
             int(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [Int64]) throws {
+    func add(keyString : String, value vs : [Int64]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [Int64]) throws {
+    func add(key : StaticString, value vs : [Int64]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : UInt){
+    func add(value v : UInt){
         uint(v)
     }
-    public func add(keyString : String, value v : UInt){
+    func add(keyString : String, value v : UInt){
         self.key(keyString)
         uint(v)
     }
-    public func add(key : StaticString, value v : UInt){
+    func add(key : StaticString, value v : UInt){
         self.key(key)
         uint(v)
     }
-    public func add(indirectValue v : UInt){
+    func add(indirectValue v : UInt){
         pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : UInt){
+    func add(keyString : String, indirectValue v : UInt){
         self.key(keyString)
         pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : UInt){
+    func add(key : StaticString, indirectValue v : UInt){
         self.key(key)
         pushIndirect(v)
     }
-    public func add(array vs : [UInt]) throws {
+    func add(array vs : [UInt]) throws {
         let start = startVector()
         for v in vs {
             uint(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [UInt]) throws {
+    func add(keyString : String, value vs : [UInt]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [UInt]) throws {
+    func add(key : StaticString, value vs : [UInt]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : UInt64){
+    func add(value v : UInt64){
         uint(v)
     }
-    public func add(keyString : String, value v : UInt64){
+    func add(keyString : String, value v : UInt64){
         self.key(keyString)
         uint(v)
     }
-    public func add(key : StaticString, value v : UInt64){
+    func add(key : StaticString, value v : UInt64){
         self.key(key)
         uint(v)
     }
-    public func add(indirectValue v : UInt64){
+    func add(indirectValue v : UInt64){
         pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : UInt64){
+    func add(keyString : String, indirectValue v : UInt64){
         self.key(keyString)
         pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : UInt64){
+    func add(key : StaticString, indirectValue v : UInt64){
         self.key(key)
         pushIndirect(v)
     }
-    public func add(array vs : [UInt64]) throws {
+    func add(array vs : [UInt64]) throws {
         let start = startVector()
         for v in vs {
             uint(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [UInt64]) throws {
+    func add(keyString : String, value vs : [UInt64]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [UInt64]) throws {
+    func add(key : StaticString, value vs : [UInt64]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : Float){
+    func add(value v : Float){
         float(v)
     }
-    public func add(keyString : String, value v : Float){
+    func add(keyString : String, value v : Float){
         self.key(keyString)
         float(v)
     }
-    public func add(key : StaticString, value v : Float){
+    func add(key : StaticString, value v : Float){
         self.key(key)
         float(v)
     }
-    public func add(indirectValue v : Float){
+    func add(indirectValue v : Float){
         pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : Float){
+    func add(keyString : String, indirectValue v : Float){
         self.key(keyString)
         pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : Float){
+    func add(key : StaticString, indirectValue v : Float){
         self.key(key)
         pushIndirect(v)
     }
-    public func add(array vs : [Float]) throws {
+    func add(array vs : [Float]) throws {
         let start = startVector()
         for v in vs {
             float(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [Float]) throws {
+    func add(keyString : String, value vs : [Float]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [Float]) throws {
+    func add(key : StaticString, value vs : [Float]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : Double){
+    func add(value v : Double){
         double(v)
     }
-    public func add(keyString : String, value v : Double){
+    func add(keyString : String, value v : Double){
         self.key(keyString)
         double(v)
     }
-    public func add(key : StaticString, value v : Double){
+    func add(key : StaticString, value v : Double){
         self.key(key)
         double(v)
     }
-    public func add(indirectValue v : Double) throws {
+    func add(indirectValue v : Double) throws {
         try pushIndirect(v)
     }
-    public func add(keyString : String, indirectValue v : Double) throws {
+    func add(keyString : String, indirectValue v : Double) throws {
         self.key(keyString)
         try pushIndirect(v)
     }
-    public func add(key : StaticString, indirectValue v : Double) throws {
+    func add(key : StaticString, indirectValue v : Double) throws {
         self.key(key)
         try pushIndirect(v)
     }
-    public func add(array vs : [Double]) throws {
+    func add(array vs : [Double]) throws {
         let start = startVector()
         for v in vs {
             double(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [Double]) throws {
+    func add(keyString : String, value vs : [Double]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [Double]) throws {
+    func add(key : StaticString, value vs : [Double]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(stringValue v : String){
+    func add(stringValue v : String){
         string(v)
     }
-    public func add(keyString : String, stringValue v : String){
+    func add(keyString : String, stringValue v : String){
         self.key(keyString)
         string(v)
     }
-    public func add(key : StaticString, stringValue v : String){
+    func add(key : StaticString, stringValue v : String){
         self.key(key)
         string(v)
     }
-    public func add(array vs : [String]) throws {
+    func add(array vs : [String]) throws {
         let start = startVector()
         for v in vs {
             string(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [String]) throws {
+    func add(keyString : String, value vs : [String]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [String]) throws {
+    func add(key : StaticString, value vs : [String]) throws {
         self.key(key)
         try add(array:vs)
     }
-    public func add(value v : StaticString){
+    func add(value v : StaticString){
         string(v)
     }
-    public func add(keyString : String, value v : StaticString){
+    func add(keyString : String, value v : StaticString){
         self.key(keyString)
         string(v)
     }
-    public func add(key : StaticString, value v : StaticString){
+    func add(key : StaticString, value v : StaticString){
         self.key(key)
         string(v)
     }
-    public func add(array vs : [StaticString]) throws {
+    func add(array vs : [StaticString]) throws {
         let start = startVector()
         for v in vs {
             string(v)
         }
         _ = try endVector(start: start, typed: true, fixed: false)
     }
-    public func add(keyString : String, value vs : [StaticString]) throws {
+    func add(keyString : String, value vs : [StaticString]) throws {
         self.key(keyString)
         try add(array:vs)
     }
-    public func add(key : StaticString, value vs : [StaticString]) throws {
+    func add(key : StaticString, value vs : [StaticString]) throws {
         self.key(key)
         try add(array:vs)
     }
     
-    public func add(value: Data){
+    func add(value: Data){
         let length = value.count
         let bitWidth = BitWidth.width(uint: UInt64(length))
         let byteWidth = align(width: bitWidth)
         write(value: length, size: byteWidth)
         let sloc = offset
-        
-        _ = value.withUnsafeBytes { (byte: UnsafePointer<UInt8>) -> Bool in
+
+        _ = value.withUnsafeBytes { (byte) -> Bool in
             for i in 0..<length {
-                write(value: byte.advanced(by: i).pointee, size: 1)
+                write(value: byte.baseAddress?.assumingMemoryBound(to: UInt8.self).advanced(by: i).pointee, size: 1)
             }
             return true
         }
         
         stack.append(Value(value: UInt64(sloc), type: .blob, bitWidth: bitWidth))
     }
-    public func add(keyString : String, value v : Data) throws {
+    func add(keyString : String, value v : Data) throws {
         self.key(keyString)
         add(value:v)
     }
-    public func add(key : StaticString, value v : Data) throws {
+    func add(key : StaticString, value v : Data) throws {
         self.key(key)
         add(value:v)
     }
     
 // MARK: - TUPPLES
     
-    public func add(value v : (Int, Int)) throws {
+    func add(value v : (Int, Int)) throws {
         let start = startVector()
         int(v.0)
         int(v.1)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Int, Int)) throws {
+    func add(keyString : String, value vs : (Int, Int)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Int, Int)) throws {
+    func add(key: StaticString, value vs : (Int, Int)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (UInt, UInt)) throws {
+    func add(value v : (UInt, UInt)) throws {
         let start = startVector()
         uint(v.0)
         uint(v.1)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (UInt, UInt)) throws {
+    func add(keyString : String, value vs : (UInt, UInt)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (UInt, UInt)) throws {
+    func add(key: StaticString, value vs : (UInt, UInt)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (Double, Double)) throws {
+    func add(value v : (Double, Double)) throws {
         let start = startVector()
         double(v.0)
         double(v.1)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Double, Double)) throws {
+    func add(keyString : String, value vs : (Double, Double)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Double, Double)) throws {
+    func add(key: StaticString, value vs : (Double, Double)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (Int, Int, Int)) throws {
+    func add(value v : (Int, Int, Int)) throws {
         let start = startVector()
         int(v.0)
         int(v.1)
         int(v.2)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Int, Int, Int)) throws {
+    func add(keyString : String, value vs : (Int, Int, Int)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Int, Int, Int)) throws {
+    func add(key: StaticString, value vs : (Int, Int, Int)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (UInt, UInt, UInt)) throws {
+    func add(value v : (UInt, UInt, UInt)) throws {
         let start = startVector()
         uint(v.0)
         uint(v.1)
         uint(v.2)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (UInt, UInt, UInt)) throws {
+    func add(keyString : String, value vs : (UInt, UInt, UInt)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (UInt, UInt, UInt)) throws {
+    func add(key: StaticString, value vs : (UInt, UInt, UInt)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (Double, Double, Double)) throws {
+    func add(value v : (Double, Double, Double)) throws {
         let start = startVector()
         double(v.0)
         double(v.1)
         double(v.2)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Double, Double, Double)) throws {
+    func add(keyString : String, value vs : (Double, Double, Double)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Double, Double, Double)) throws {
+    func add(key: StaticString, value vs : (Double, Double, Double)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (Int, Int, Int, Int)) throws {
+    func add(value v : (Int, Int, Int, Int)) throws {
         let start = startVector()
         int(v.0)
         int(v.1)
@@ -1217,16 +1218,16 @@ public extension FlexBuffer {
         int(v.3)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Int, Int, Int, Int)) throws {
+    func add(keyString : String, value vs : (Int, Int, Int, Int)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Int, Int, Int, Int)) throws {
+    func add(key: StaticString, value vs : (Int, Int, Int, Int)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (UInt, UInt, UInt, UInt)) throws {
+    func add(value v : (UInt, UInt, UInt, UInt)) throws {
         let start = startVector()
         uint(v.0)
         uint(v.1)
@@ -1234,16 +1235,16 @@ public extension FlexBuffer {
         uint(v.3)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (UInt, UInt, UInt, UInt)) throws {
+    func add(keyString : String, value vs : (UInt, UInt, UInt, UInt)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (UInt, UInt, UInt, UInt)) throws {
+    func add(key: StaticString, value vs : (UInt, UInt, UInt, UInt)) throws {
         self.key(key)
         try add(value:vs)
     }
     
-    public func add(value v : (Double, Double, Double, Double)) throws {
+    func add(value v : (Double, Double, Double, Double)) throws {
         let start = startVector()
         double(v.0)
         double(v.1)
@@ -1251,11 +1252,11 @@ public extension FlexBuffer {
         double(v.3)
         _ = try endVector(start: start, typed: true, fixed: true)
     }
-    public func add(keyString : String, value vs : (Double, Double, Double, Double)) throws {
+    func add(keyString : String, value vs : (Double, Double, Double, Double)) throws {
         self.key(keyString)
         try add(value:vs)
     }
-    public func add(key: StaticString, value vs : (Double, Double, Double, Double)) throws {
+    func add(key: StaticString, value vs : (Double, Double, Double, Double)) throws {
         self.key(key)
         try add(value:vs)
     }
@@ -2139,7 +2140,7 @@ extension FlexBuffer {
                 let prevBuffer = tokenPointerStart
                 tokenPointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCapacity)
                 tokenPointerStart.initialize(from: prevBuffer, count: newTokenPointerCount)
-                prevBuffer.deallocate(capacity: newTokenPointerCount)
+                prevBuffer.deallocate()
             }
             return newTokenPointerCount
         }
@@ -2269,8 +2270,9 @@ extension FlexBuffer {
                 return  Int(c) - 97 + 10
             }
         }
-        
-        try data.withUnsafeBytes { (bytes: UnsafePointer<UInt8>) -> Void in
+
+        try data.withUnsafeBytes{ (rawBytes) -> Void in
+            let bytes = rawBytes.baseAddress!.assumingMemoryBound(to: UInt8.self)
             var i : Int = 0
             while i<data.count {
                 let c = bytes.advanced(by: i)
@@ -2360,7 +2362,7 @@ extension FlexBuffer {
                             return
                         }
                         if tokenNamePointerCapacity < tokenPointerCurrent {
-                            tokenNamePointerStart.deallocate(capacity: tokenNamePointerCapacity)
+                            tokenNamePointerStart.deallocate()
                             tokenNamePointerStart = UnsafeMutablePointer<UInt8>.allocate(capacity: tokenPointerCurrent)
                             tokenNamePointerCapacity = tokenPointerCurrent
                         }
@@ -2397,8 +2399,8 @@ extension FlexBuffer {
                 i += 1
             }
         }
-        tokenPointerStart.deallocate(capacity: tokenPointerCapacity)
-        tokenNamePointerStart.deallocate(capacity: tokenNamePointerCapacity)
+        tokenPointerStart.deallocate()
+        tokenNamePointerStart.deallocate()
         let flxbData = try flx.finish()
         return FlxbData(data: flxbData)
     }

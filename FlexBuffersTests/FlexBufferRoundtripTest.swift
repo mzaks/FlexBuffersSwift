@@ -37,7 +37,7 @@ class FlexBufferRoundtripTest: XCTestCase {
         let v = FlexBuffer.decode(data: data)!.asMap!
         
         print(v.debugDescription)
-        print("{vec:[-100,\"Fred\",4.0],bar:[1,2,3],bar3:[1,2,3]foo:100,mymap{foo:\"Fred\"}}".characters.count)
+        print("{vec:[-100,\"Fred\",4.0],bar:[1,2,3],bar3:[1,2,3]foo:100,mymap{foo:\"Fred\"}}".count)
         
         XCTAssertEqual(v.count, 5)
         XCTAssertEqual(v["vec"]?.asVector?[0]?.asInt, -100)
@@ -141,7 +141,7 @@ class FlexBufferRoundtripTest: XCTestCase {
         
         let v = FlexBuffer.decode(data: data)!.asVector!
         
-        let array = v.makeIterator().flatMap{$0.asBool}
+        let array = v.makeIterator().compactMap{$0.asBool}
         
         XCTAssertEqual(array, [true, true , false, true])
     }
