@@ -158,56 +158,60 @@ func create() -> Data {
     return try!FlexBuffer.encode(object).data
 }
 
+let sibling_dict1 = [
+    "sibling" : [
+        "parent" : [
+            "id" : 0xABADCAFE + UInt64(0),
+            "count" : 10000 + 0,
+            "prefix" : 64 + 0,
+            "length" : UInt32(1000000 + 0)
+        ],
+        "time" : 123456 + 0,
+        "ratio" : 3.14159 + Float(0),
+        "size" : UInt16(10000 + 0)
+    ],
+    "name" : "Hello, World!",
+    "rating" : 3.1415432432445543543+Double(0),
+    "postfix" : UInt8(33 + 0)
+] as [String: Any]
+
+let sibling_dict2 = [
+    "sibling" : [
+        "parent" : [
+            "id" : 0xABADCAFE + UInt64(1),
+            "count" : 10000 + 1,
+            "prefix" : 64 + 1,
+            "length" : UInt32(1000000 + 1)
+        ],
+        "time" : 123456 + 1,
+        "ratio" : 3.14159 + Float(1),
+        "size" : UInt16(10000 + 1)
+    ],
+    "name" : "Hello, World!",
+    "rating" : 3.1415432432445543543+Double(1),
+    "postfix" : UInt8(33 + 1)
+] as [String: Any]
+
+let sibling_dict3 = [
+    "sibling" : [
+        "parent" : [
+            "id" : 0xABADCAFE + UInt64(2),
+            "count" : 10000 + 2,
+            "prefix" : 64 + 2,
+            "length" : UInt32(1000000 + 2)
+        ],
+        "time" : 123456 + 2,
+        "ratio" : 3.14159 + Float(2),
+        "size" : UInt16(10000 + 2)
+    ],
+    "name" : "Hello, World!",
+    "rating" : 3.1415432432445543543+Double(2),
+    "postfix" : UInt8(33 + 2)
+] as [String: Any]
+
 let object2 = [
     "list" : [
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(0),
-                    "count" : 10000 + 0,
-                    "prefix" : 64 + 0,
-                    "length" : UInt32(1000000 + 0)
-                ],
-                "time" : 123456 + 0,
-                "ratio" : 3.14159 + Float(0),
-                "size" : UInt16(10000 + 0)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(0),
-            "postfix" : UInt8(33 + 0)
-        ],
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(1),
-                    "count" : 10000 + 1,
-                    "prefix" : 64 + 1,
-                    "length" : UInt32(1000000 + 1)
-                ],
-                "time" : 123456 + 1,
-                "ratio" : 3.14159 + Float(1),
-                "size" : UInt16(10000 + 1)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(1),
-            "postfix" : UInt8(33 + 1)
-        ],
-        [
-            "sibling" : [
-                "parent" : [
-                    "id" : 0xABADCAFE + UInt64(2),
-                    "count" : 10000 + 2,
-                    "prefix" : 64 + 2,
-                    "length" : UInt32(1000000 + 2)
-                ],
-                "time" : 123456 + 2,
-                "ratio" : 3.14159 + Float(2),
-                "size" : UInt16(10000 + 2)
-            ],
-            "name" : "Hello, World!",
-            "rating" : 3.1415432432445543543+Double(2),
-            "postfix" : UInt8(33 + 2)
-        ]
+        sibling_dict1, sibling_dict2, sibling_dict3
     ],
     "location" : "http://google.com/flatbuffers/",
     "initialized" : true,
@@ -482,7 +486,7 @@ private func use4(_ data : Data, start : Int) -> Int
 let NumberOfDecodings = 100_000
 let NumberOfEncodings = 100_000
 
-var datas = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas = [Data?](repeating: nil, count: NumberOfEncodings)
 var m = getMegabytesUsed()!
 var d = 0.0
 
@@ -499,7 +503,7 @@ print("\(data) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas_ = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas_ = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas_[i] = try!createContainerWithBuilder()
@@ -511,7 +515,7 @@ print("\(data_) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas1 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas1 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas1[i] = create()
@@ -523,7 +527,7 @@ print("\(data1) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas5 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas5 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas5[i] = createFlexBufferFromJsonString().data
@@ -535,7 +539,7 @@ print("\(data5) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas2 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas2 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas2[i] = createJsonData()
@@ -547,7 +551,7 @@ print("\(data2) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas0 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas0 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 let flx0 = FlexBuffer(initialSize: 1024, options: [])
 for i in 0 ..< NumberOfEncodings {
@@ -560,7 +564,7 @@ print("\(data0) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas3 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas3 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas3[i] = createFlatBufferContainer()
@@ -572,7 +576,7 @@ print("\(data3) in \(d) \(getMegabytesUsed()! - m) MB")
 print("-")
 m = getMegabytesUsed()!
 
-var datas4 = [Data!](repeating: nil, count: NumberOfEncodings)
+var datas4 = [Data?](repeating: nil, count: NumberOfEncodings)
 t = CFAbsoluteTimeGetCurrent()
 for i in 0 ..< NumberOfEncodings {
     datas4[i] = createFlatBufferContainerWithoutDataDuplication()
